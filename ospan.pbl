@@ -1,0 +1,168 @@
+
+
+define PrintList(aList)
+{
+	i<-1
+	str<-""
+	while ( i <= Length(aList))
+	{
+		str<-str+Nth(aList,i)
+		i<-i+1
+	}
+	Print(str)	
+}
+
+define Sample(aNum,aFrom)
+{
+	rval<-[]
+
+	if ( aNum > Length( aFrom ) )
+	{
+		SignalFatalError("Too few items in population for sample")
+	} elseif ( Length( aFrom ) < 1 ) {
+		SignalFatalError("No population!")
+	}
+
+	popLen<-Length(aFrom)
+	while ( aNum > 0 )
+	{
+		#PrintList(aFrom)
+		sampleIdx<-RandomDiscrete(popLen)
+
+		# add to rval
+		PushOnEnd(rval, Nth(aFrom, sampleIdx))
+
+		# push chosen off end
+		tmp<-Nth(aFrom, popLen)
+		SetElement(aFrom, popLen, Nth(aFrom, sampleIdx))
+		SetElement(aFrom, sampleIdx, tmp)
+
+		aNum<-aNum-1
+		popLen<-popLen-1
+	}
+	return (rval)
+}
+
+define PresentRun(aNumLetters)
+{
+  grid<-Sample( gGridNumCol * gGridNumRow, ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"])
+	testVals<=Sample(aNumLetters,grid)
+
+
+
+}
+
+
+define Start(par)
+{
+	# globals
+	gGridNumCol<-3
+	gGridNumRow<-4
+
+  gWindow <- MakeWindow("grey")
+	Draw()
+
+  s<-Sample( gGridNumCol * gGridNumRow, ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"])
+	PrintList(s)
+
+	WaitForAnyKeyPress()
+}
+
+##
+#define Start(par)
+#{
+#  ##Make initial objects needed for display.
+#  gWindow <- MakeWindow("grey")
+#  gPic <- MakeImage("pebl.bmp")
+#  
+#  gSmiley <- MakeImage("smiley-big.png")
+#  gFrowney <- MakeImage("frowney-big.png")
+#  AddObject(gPic, gWindow)
+#  AddObject(gSmiley, gWindow)
+#  AddObject(gFrowney, gWindow)
+#
+#  gSmile2 <- MakeImage("smiley-big.png")
+#  gFrowne2 <- MakeImage("frowney-big.png")
+#
+#  AddObject(gSmile2, gWindow)
+#  AddObject(gFrowne2, gWindow)
+#  
+#  Move(gSmiley, 300,50)
+#  Move(gFrowney, 300,50)
+#
+#  Move(gSmile2, 300,300)
+#  Move(gFrowne2, 300,300)
+#  
+#  lBG <- MakeColor("GREY")
+#  lFG <- MakeColor("dodgerblue3")
+#  lFont <- MakeFont("Vera.ttf",0,22,lFG,lBG,0)
+#  lText <- MakeLabel("Hello World", lFont)
+#  
+#  ##Initially place text here
+#  Move(lText, 300,200)
+#  ##Add text to the window.
+#  AddObject(lText,gWindow)
+#  ##Nothing appears until you draw!!!
+#  Draw()
+#
+#  ##Uncomment to write a PNG file
+#  # WritePNG("window.png",gwindow)
+#  # WritePNG("smiles.png",gSmiley)
+#  # WritePNG("text.png",lText)
+#
+#  
+#  ##Set the positions of things
+#  x <- 0
+#  y <- 50
+#  
+#  ##The following loop enables simple animation.
+#  i <- 1
+#  while(i <= 350)
+#    {
+#      x <- x + 2
+#      y <- y + 1
+#      Move(lText,x, 25 * Sin(x / 25) + 300 - x/3)
+#      Move(gPic, x, y)
+#      
+#
+##      PrintProperties(gPic)
+#
+#      if(Mod(i,50) == 0) 
+#        {
+#          Hide(gFrowney)
+#          Show(gSmiley)
+#
+#          Hide(gSmile2)
+#          Show(gFrowne2)
+#        }
+#      if(Mod(i,50) == 25)
+#        {
+#          Hide(gSmiley)
+#          Show(gFrowney)
+#
+#          Hide(gFrowne2)
+#          Show(gSmile2)
+#        }
+#      
+#      Draw()	
+#
+#			Wait(10)
+#      
+#      i <- i + 1
+#      
+#      
+#    }
+#  
+#  ##Hide the sprites.
+#  #Hide(lText)
+#  #Hide(gPic)
+#  
+#  ##Make a new text label giving instructions about how to proceed
+#  lText2 <-MakeLabel("Wait a few seconds to continue.", lFont)
+#  AddObject(lText2,gWindow)	
+#  Move(lText2, 200, 300)	
+#  Draw()
+#  
+#  Wait(1000)
+#  WaitForAnyKeyPress()
+#}
