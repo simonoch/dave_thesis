@@ -1,6 +1,6 @@
 
 
-define PrintList(aList)
+define PrefixPrintList(aPrefix,aList)
 {
 	i<-1
 	str<-""
@@ -9,7 +9,12 @@ define PrintList(aList)
 		str<-str+Nth(aList,i)
 		i<-i+1
 	}
-	Print(str)	
+	Print(aPrefix+str)	
+}
+
+define PrintList(aList)
+{
+	PrefixPrintList("",aList)
 }
 
 define Sample(aNum,aFrom)
@@ -46,10 +51,47 @@ define Sample(aNum,aFrom)
 define PresentRun(aNumLetters)
 {
   grid<-Sample( gGridNumCol * gGridNumRow, ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"])
-	testVals<=Sample(aNumLetters,grid)
+	testVals<-Sample(aNumLetters,grid)
 
+	PrefixPrintList("Grid:",grid)
+	PrefixPrintList("Test:",testVals)
 
+  fontBG <- MakeColor("white")
+  fontFG <- MakeColor("black")
+  lFont <- MakeFont("Vera.ttf",0,22,fontFG,fontBG,0)
 
+	dispMS <- 1000
+
+	i <- 1
+	while ( i <= Length(testVals ) )
+	{
+		lText <- MakeLabel(Nth(testVals,i), lFont)
+		Move(lText, 300,200)
+		AddObject(lText,gWindow)
+		Draw()
+		Wait(dispMS)
+		i<-i+1
+	}
+
+	gridTop <- 100
+	gridLeft <- 100
+	gridSpace <- 30
+	i <- 1
+	gridText<-[]
+	while ( i <= gGridNumCol * gGridNumRow )
+	{
+		x <- Mod( i, gGridNumCol)
+		y <- i / gGridNumCol
+
+		gridLabel<-MakeLabel(Nth(grid,i), lFont)
+		Move(gridLabel, gridLeft + x * gridSpace, gridTop + y * gridSpace ) 
+		AddObject(gridLabel,gWindow)
+		Wait(100)
+		Draw()
+
+		i<-i+1
+	}
+	WaitForAnyKeyPress()
 }
 
 
@@ -59,11 +101,12 @@ define Start(par)
 	gGridNumCol<-3
 	gGridNumRow<-4
 
-  gWindow <- MakeWindow("grey")
+  gWindow <- MakeWindow("white")
 	Draw()
 
-  s<-Sample( gGridNumCol * gGridNumRow, ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"])
-	PrintList(s)
+  #s<-Sample( gGridNumCol * gGridNumRow, ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"])
+	#PrintList(s)
+	PresentRun(3)
 
 	WaitForAnyKeyPress()
 }
