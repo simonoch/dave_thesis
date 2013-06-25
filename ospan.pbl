@@ -17,48 +17,23 @@ define PrintList(aList)
 	PrefixPrintList("",aList)
 }
 
-define Sample(aNum,aFrom)
-{
-	rval<-[]
-
-	if ( aNum > Length( aFrom ) )
-	{
-		SignalFatalError("Too few items in population for sample")
-	} elseif ( Length( aFrom ) < 1 ) {
-		SignalFatalError("No population!")
-	}
-
-	popLen<-Length(aFrom)
-	while ( aNum > 0 )
-	{
-		#PrintList(aFrom)
-		sampleIdx<-RandomDiscrete(popLen)
-
-		# add to rval
-		PushOnEnd(rval, Nth(aFrom, sampleIdx))
-
-		# push chosen off end
-		tmp<-Nth(aFrom, popLen)
-		SetElement(aFrom, popLen, Nth(aFrom, sampleIdx))
-		SetElement(aFrom, sampleIdx, tmp)
-
-		aNum<-aNum-1
-		popLen<-popLen-1
-	}
-	return (rval)
-}
-
 define PresentRun(aNumLetters)
 {
-  grid<-Sample( gGridNumCol * gGridNumRow, ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"])
-	testVals<-Sample(aNumLetters,grid)
+  grid<-SampleN(  ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"], gGridNumCol * gGridNumRow)
+	testVals<-SampleN(grid, aNumLetters)
+
+	#winSz<-GetSize(gWindow)
+	winSz<-[gVideoWidth,gVideoHeight]
+	Print("winSz[1]="+Nth(winSz,1))
+	Print("winSz[2]="+Nth(winSz,2))
 
 	PrefixPrintList("Grid:",grid)
 	PrefixPrintList("Test:",testVals)
 
   fontBG <- MakeColor("white")
   fontFG <- MakeColor("black")
-  lFont <- MakeFont("Vera.ttf",0,22,fontFG,fontBG,0)
+	fontSize<-40
+  lFont <- MakeFont("Vera.ttf",0,fontSize,fontFG,fontBG,0)
 
 	dispMS <- 1000
 
@@ -66,16 +41,22 @@ define PresentRun(aNumLetters)
 	while ( i <= Length(testVals ) )
 	{
 		lText <- MakeLabel(Nth(testVals,i), lFont)
-		Move(lText, 300,200)
+		lSz<-GetSize(lText)
+		xPos<- Nth(winSz, 1)  - Nth( lSz, 1)
+		xPos<- xPos / 2
+		yPos<- Nth( winSz, 2) -Nth(lSz, 2)
+		yPos<- yPos / 2
+		Move(lText, xPos,yPos)
 		AddObject(lText,gWindow)
 		Draw()
 		Wait(dispMS)
+		RemoveObject(lText,gWindow)
 		i<-i+1
 	}
 
 	gridTop <- 100
 	gridLeft <- 100
-	gridSpace <- 60
+	gridSpace <- 3 * fontSize
 	i <- 1
 	gridText<-[]
 	while ( i <= gGridNumCol * gGridNumRow )
@@ -109,7 +90,7 @@ define Start(par)
   gWindow <- MakeWindow("white")
 	Draw()
 
-  #s<-Sample( gGridNumCol * gGridNumRow, ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"])
+  #s<-SampleN(  ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"], gGridNumCol * gGridNumRow)
 	#PrintList(s)
 	PresentRun(3)
 
