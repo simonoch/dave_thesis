@@ -75,22 +75,27 @@ define PresentRun(aNumLetters)
 
 	gridTop <- 100
 	gridLeft <- 100
-	gridSpace <- 30
+	gridSpace <- 60
 	i <- 1
 	gridText<-[]
 	while ( i <= gGridNumCol * gGridNumRow )
 	{
-		x <- Mod( i, gGridNumCol)
-		y <- i / gGridNumCol
+		x <- Mod( i-1, gGridNumCol)
+		y <- Floor((i-1) / gGridNumCol)
 
-		gridLabel<-MakeLabel(Nth(grid,i), lFont)
-		Move(gridLabel, gridLeft + x * gridSpace, gridTop + y * gridSpace ) 
-		AddObject(gridLabel,gWindow)
-		Wait(100)
-		Draw()
+		PushOnEnd(gridText, MakeLabel(Nth(grid,i), lFont) )
+		#PushOnEnd(gridText, MakeLabel("("+x+","+y+")", lFont) )
+
+		Move(Nth(gridText,i), gridLeft + x * gridSpace, gridTop + y * gridSpace ) 
+		AddObject(Nth(gridText,i),gWindow)
 
 		i<-i+1
 	}
+
+	Draw()
+
+	# get input
+
 	WaitForAnyKeyPress()
 }
 
