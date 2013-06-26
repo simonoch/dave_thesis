@@ -94,7 +94,10 @@ define PresentRun(aNumLetters)
 
 define GetMouseInput()
 {
-
+	ShowCursor(1)
+	SetMouseCursorPosition(Round(gVideoWidth/2), Round(gVideoHeight/2))
+	WaitForAnyKeyPress()
+	ShowCursor(0)
 }
 
 define DrawDebug()
@@ -116,7 +119,7 @@ define DrawDebug()
 
 define Start(par)
 {
-
+	ShowCursor(0)
 
 	gDispMS <- 500
 
