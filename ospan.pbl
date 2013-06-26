@@ -17,15 +17,17 @@ define PrintList(aList)
 	PrefixPrintList("",aList)
 }
 
+define LogSpam( str )
+{
+	Print( str )
+}
+
 define PresentRun(aNumLetters)
 {
   grid<-SampleN(  ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"], gGridNumCol * gGridNumRow)
 	testVals<-SampleN(grid, aNumLetters)
 
-	#winSz<-GetSize(gWindow)
 	winSz<-[gVideoWidth,gVideoHeight]
-	Print("winSz[1]="+Nth(winSz,1))
-	Print("winSz[2]="+Nth(winSz,2))
 
 	PrefixPrintList("Grid:",grid)
 	PrefixPrintList("Test:",testVals)
@@ -37,26 +39,27 @@ define PresentRun(aNumLetters)
 
 	dispMS <- 1000
 
-	i <- 1
-	while ( i <= Length(testVals ) )
+	Loop( testVal, testVals )
 	{
-		lText <- MakeLabel(Nth(testVals,i), lFont)
-		lSz<-GetSize(lText)
-		xPos<- Nth(winSz, 1)  - Nth( lSz, 1)
-		xPos<- xPos / 2
-		yPos<- Nth( winSz, 2) -Nth(lSz, 2)
-		yPos<- yPos / 2
+
+		lText <- MakeLabel(testVal, lFont)
+		xPos<- gVideoWidth/2
+		yPos<- gVideoHeight/2
 		Move(lText, xPos,yPos)
 		AddObject(lText,gWindow)
 		Draw()
 		Wait(dispMS)
 		RemoveObject(lText,gWindow)
-		i<-i+1
 	}
 
-	gridTop <- 100
-	gridLeft <- 100
 	gridSpace <- 3 * fontSize
+	gridTop <- gVideoHeight/2
+	gridLeft <- gVideoWidth/2
+
+	gridTop<-gridTop-gridSpace*gGridNumRow*0.5
+	gridLeft<-gridLeft-gridSpace*gGridNumCol*0.5
+	
+
 	i <- 1
 	gridText<-[]
 	while ( i <= gGridNumCol * gGridNumRow )
@@ -65,7 +68,6 @@ define PresentRun(aNumLetters)
 		y <- Floor((i-1) / gGridNumCol)
 
 		PushOnEnd(gridText, MakeLabel(Nth(grid,i), lFont) )
-		#PushOnEnd(gridText, MakeLabel("("+x+","+y+")", lFont) )
 
 		Move(Nth(gridText,i), gridLeft + x * gridSpace, gridTop + y * gridSpace ) 
 		AddObject(Nth(gridText,i),gWindow)
