@@ -32,24 +32,21 @@ define PresentRun(aNumLetters)
 	PrefixPrintList("Grid:",grid)
 	PrefixPrintList("Test:",testVals)
 
-  fontBG <- MakeColor("white")
-  fontFG <- MakeColor("black")
 	fontSize<-40
-  lFont <- MakeFont("Vera.ttf",0,fontSize,fontFG,fontBG,0)
-
-	dispMS <- 1000
+	#dispMS <- 1000
+	dispMS <- 100
 
 	Loop( testVal, testVals )
 	{
 
-		lText <- MakeLabel(testVal, lFont)
+		lText <- MakeLabel(testVal, gLgFont)
 		xPos<- gVideoWidth/2
 		yPos<- gVideoHeight/2
 		Move(lText, xPos,yPos)
-		AddObject(lText,gWindow)
+		AddObject(lText,gWin)
 		Draw()
 		Wait(dispMS)
-		RemoveObject(lText,gWindow)
+		RemoveObject(lText,gWin)
 	}
 
 	gridSpace <- 3 * fontSize
@@ -58,7 +55,6 @@ define PresentRun(aNumLetters)
 
 	gridTop<-gridTop-gridSpace*gGridNumRow*0.5
 	gridLeft<-gridLeft-gridSpace*gGridNumCol*0.5
-	
 
 	i <- 1
 	gridText<-[]
@@ -67,10 +63,10 @@ define PresentRun(aNumLetters)
 		x <- Mod( i-1, gGridNumCol)
 		y <- Floor((i-1) / gGridNumCol)
 
-		PushOnEnd(gridText, MakeLabel(Nth(grid,i), lFont) )
+		PushOnEnd(gridText, MakeLabel(Nth(grid,i), gLgFont) )
 
 		Move(Nth(gridText,i), gridLeft + x * gridSpace, gridTop + y * gridSpace ) 
-		AddObject(Nth(gridText,i),gWindow)
+		AddObject(Nth(gridText,i),gWin)
 
 		i<-i+1
 	}
@@ -82,6 +78,22 @@ define PresentRun(aNumLetters)
 	WaitForAnyKeyPress()
 }
 
+define DrawDebug()
+{
+	gDebugLab1<-MakeLabel("gVideoWidth="+gVideoWidth, gDbgFont)
+	AddObject( gDebugLab1, gWin )
+	Move( gDebugLab1, 100, 10 )
+
+	gDebugLab2<-MakeLabel("gVideoHeight="+gVideoHeight, gDbgFont)
+	Move( gDebugLab2, 110, 30 )
+	AddObject( gDebugLab2, gWin )
+
+	gYAxis<-ThickLine(gVideoWidth/2, 0, gVideoWidth/2, gVideoHeight, 2, gDbgColor )
+	AddObject( gYAxis, gWin )
+
+	gXAxis<-ThickLine(0, gVideoHeight/2, gVideoWidth, gVideoHeight/2, 2, gDbgColor )
+	AddObject( gXAxis, gWin )
+}
 
 define Start(par)
 {
@@ -89,8 +101,22 @@ define Start(par)
 	gGridNumCol<-3
 	gGridNumRow<-4
 
-  gWindow <- MakeWindow("white")
+	gFGColor <- MakeColor("black")
+	gBGColor <- MakeColor("white")
+
+	gDbgColor <-MakeColor("grey90")
+
+	fontSize<-40
+  gLgFont <- MakeFont("Vera.ttf",0,40,gFGColor,gBGColor,0)
+	gSmlFont<- MakeFont( "Vera.ttf",0,20,gFGColor,gBGColor,0)
+	gDbgFont<-MakeFont(  "Vera.ttf",0,20,gDbgColor,gBGColor,0)
+
+  gWin <- MakeWindow("white")
+	DrawDebug()
+
+
 	Draw()
+	WaitForAnyKeyPress()
 
   #s<-SampleN(  ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"], gGridNumCol * gGridNumRow)
 	#PrintList(s)
@@ -98,102 +124,3 @@ define Start(par)
 
 	WaitForAnyKeyPress()
 }
-
-##
-#define Start(par)
-#{
-#  ##Make initial objects needed for display.
-#  gWindow <- MakeWindow("grey")
-#  gPic <- MakeImage("pebl.bmp")
-#  
-#  gSmiley <- MakeImage("smiley-big.png")
-#  gFrowney <- MakeImage("frowney-big.png")
-#  AddObject(gPic, gWindow)
-#  AddObject(gSmiley, gWindow)
-#  AddObject(gFrowney, gWindow)
-#
-#  gSmile2 <- MakeImage("smiley-big.png")
-#  gFrowne2 <- MakeImage("frowney-big.png")
-#
-#  AddObject(gSmile2, gWindow)
-#  AddObject(gFrowne2, gWindow)
-#  
-#  Move(gSmiley, 300,50)
-#  Move(gFrowney, 300,50)
-#
-#  Move(gSmile2, 300,300)
-#  Move(gFrowne2, 300,300)
-#  
-#  lBG <- MakeColor("GREY")
-#  lFG <- MakeColor("dodgerblue3")
-#  lFont <- MakeFont("Vera.ttf",0,22,lFG,lBG,0)
-#  lText <- MakeLabel("Hello World", lFont)
-#  
-#  ##Initially place text here
-#  Move(lText, 300,200)
-#  ##Add text to the window.
-#  AddObject(lText,gWindow)
-#  ##Nothing appears until you draw!!!
-#  Draw()
-#
-#  ##Uncomment to write a PNG file
-#  # WritePNG("window.png",gwindow)
-#  # WritePNG("smiles.png",gSmiley)
-#  # WritePNG("text.png",lText)
-#
-#  
-#  ##Set the positions of things
-#  x <- 0
-#  y <- 50
-#  
-#  ##The following loop enables simple animation.
-#  i <- 1
-#  while(i <= 350)
-#    {
-#      x <- x + 2
-#      y <- y + 1
-#      Move(lText,x, 25 * Sin(x / 25) + 300 - x/3)
-#      Move(gPic, x, y)
-#      
-#
-##      PrintProperties(gPic)
-#
-#      if(Mod(i,50) == 0) 
-#        {
-#          Hide(gFrowney)
-#          Show(gSmiley)
-#
-#          Hide(gSmile2)
-#          Show(gFrowne2)
-#        }
-#      if(Mod(i,50) == 25)
-#        {
-#          Hide(gSmiley)
-#          Show(gFrowney)
-#
-#          Hide(gFrowne2)
-#          Show(gSmile2)
-#        }
-#      
-#      Draw()	
-#
-#			Wait(10)
-#      
-#      i <- i + 1
-#      
-#      
-#    }
-#  
-#  ##Hide the sprites.
-#  #Hide(lText)
-#  #Hide(gPic)
-#  
-#  ##Make a new text label giving instructions about how to proceed
-#  lText2 <-MakeLabel("Wait a few seconds to continue.", lFont)
-#  AddObject(lText2,gWindow)	
-#  Move(lText2, 200, 300)	
-#  Draw()
-#  
-#  Wait(1000)
-#  WaitForAnyKeyPress()
-#}
