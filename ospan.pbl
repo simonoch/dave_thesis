@@ -53,8 +53,8 @@ define PresentRun(aNumLetters)
 	gridTop <- gVideoHeight/2
 	gridLeft <- gVideoWidth/2
 
-	gridTop<-gridTop-gridSpace*gGridNumRow*0.5
-	gridLeft<-gridLeft-gridSpace*gGridNumCol*0.5
+	gridTop<-gridTop-gridSpace*(gGridNumRow-1)*0.5
+	gridLeft<-gridLeft-gridSpace*(gGridNumCol-1)*0.5
 
 	i <- 1
 	gridText<-[]
@@ -115,8 +115,8 @@ define Start(par)
 	DrawDebug()
 
 
-	Draw()
-	WaitForAnyKeyPress()
+	#Draw()
+	#WaitForAnyKeyPress()
 
   #s<-SampleN(  ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"], gGridNumCol * gGridNumRow)
 	#PrintList(s)
