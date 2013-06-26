@@ -32,10 +32,6 @@ define PresentRun(aNumLetters)
 	PrefixPrintList("Grid:",grid)
 	PrefixPrintList("Test:",testVals)
 
-	fontSize<-40
-	#dispMS <- 1000
-	dispMS <- 100
-
 	Loop( testVal, testVals )
 	{
 
@@ -45,37 +41,60 @@ define PresentRun(aNumLetters)
 		Move(lText, xPos,yPos)
 		AddObject(lText,gWin)
 		Draw()
-		Wait(dispMS)
+		Wait(gDispMS)
 		RemoveObject(lText,gWin)
 	}
 
-	gridSpace <- 3 * fontSize
+	gridSpace <- 3 * gLgFontSz
 	gridTop <- gVideoHeight/2
 	gridLeft <- gVideoWidth/2
 
+	# the main grid of letters
 	gridTop<-gridTop-gridSpace*(gGridNumRow-1)*0.5
 	gridLeft<-gridLeft-gridSpace*(gGridNumCol-1)*0.5
 
 	i <- 1
 	gridText<-[]
+	xOffset<-0
+	yOffset<-0
 	while ( i <= gGridNumCol * gGridNumRow )
 	{
-		x <- Mod( i-1, gGridNumCol)
-		y <- Floor((i-1) / gGridNumCol)
+		xOffset <- Mod( i-1, gGridNumCol)
+		yOffset <- Floor((i-1) / gGridNumCol)
 
 		PushOnEnd(gridText, MakeLabel(Nth(grid,i), gLgFont) )
 
-		Move(Nth(gridText,i), gridLeft + x * gridSpace, gridTop + y * gridSpace ) 
+		Move(Nth(gridText,i), gridLeft + xOffset * gridSpace, gridTop + yOffset * gridSpace ) 
 		AddObject(Nth(gridText,i),gWin)
 
+		i<-i+1
+	}
+
+	# the grid/row of user selections	
+	gridTop<-gridTop + yOffset * gridSpace + 1.5 * gridSpace
+	gridLeft<-gVideoWidth/2-gridSpace*(Length(testVals)-1)*0.5
+
+	selLabels<-[]
+	i<-1
+	while ( i <= Length(testVals))
+	{
+		PushOnEnd(selLabels, MakeLabel( "*", gLgFont ) )	
+		Move(Nth(selLabels,i), gridLeft + ( i - 1 ) * gridSpace, gridTop )
+		AddObject(Nth(selLabels,i), gWin )
 		i<-i+1
 	}
 
 	Draw()
 
 	# get input
+	GetMouseInput()
 
 	WaitForAnyKeyPress()
+}
+
+define GetMouseInput()
+{
+
 }
 
 define DrawDebug()
@@ -97,6 +116,10 @@ define DrawDebug()
 
 define Start(par)
 {
+
+
+	gDispMS <- 500
+
 	# globals
 	gGridNumCol<-3
 	gGridNumRow<-4
@@ -106,8 +129,8 @@ define Start(par)
 
 	gDbgColor <-MakeColor("grey90")
 
-	fontSize<-40
-  gLgFont <- MakeFont("Vera.ttf",0,40,gFGColor,gBGColor,0)
+	gLgFontSz<-40
+  gLgFont <- MakeFont("Vera.ttf",0,gLgFontSz,gFGColor,gBGColor,0)
 	gSmlFont<- MakeFont( "Vera.ttf",0,20,gFGColor,gBGColor,0)
 	gDbgFont<-MakeFont(  "Vera.ttf",0,20,gDbgColor,gBGColor,0)
 
@@ -120,7 +143,5 @@ define Start(par)
 
   #s<-SampleN(  ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"], gGridNumCol * gGridNumRow)
 	#PrintList(s)
-	PresentRun(3)
-
-	WaitForAnyKeyPress()
+	PresentRun(5)
 }
