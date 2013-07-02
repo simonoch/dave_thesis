@@ -24,12 +24,12 @@ define LogSpam( str )
 
 define PresentRun(aNumLetters)
 {
-  grid<-SampleN(  ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"], gGridNumCol * gGridNumRow)
-	testVals<-SampleN(grid, aNumLetters)
+  gridText<-SampleN(  ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"], gGridNumCol * gGridNumRow)
+	testVals<-SampleN(gridText, aNumLetters)
 
 	winSz<-[gVideoWidth,gVideoHeight]
 
-	PrefixPrintList("Grid:",grid)
+	PrefixPrintList("Grid:",gridText)
 	PrefixPrintList("Test:",testVals)
 
 	Loop( testVal, testVals )
@@ -54,7 +54,7 @@ define PresentRun(aNumLetters)
 	gridLeft<-gridLeft-gridSpace*(gGridNumCol-1)*0.5
 
 	i <- 1
-	gridText<-[]
+	gridLabels<-[]
 	xOffset<-0
 	yOffset<-0
 	while ( i <= gGridNumCol * gGridNumRow )
@@ -62,10 +62,10 @@ define PresentRun(aNumLetters)
 		xOffset <- Mod( i-1, gGridNumCol)
 		yOffset <- Floor((i-1) / gGridNumCol)
 
-		PushOnEnd(gridText, MakeLabel(Nth(grid,i), gLgFont) )
+		PushOnEnd(gridLabels, MakeLabel(Nth(gridText,i), gLgFont) )
 
-		Move(Nth(gridText,i), gridLeft + xOffset * gridSpace, gridTop + yOffset * gridSpace ) 
-		AddObject(Nth(gridText,i),gWin)
+		Move(Nth(gridLabels,i), gridLeft + xOffset * gridSpace, gridTop + yOffset * gridSpace ) 
+		AddObject(Nth(gridLabels,i),gWin)
 
 		i<-i+1
 	}
@@ -87,17 +87,60 @@ define PresentRun(aNumLetters)
 	Draw()
 
 	# get input
-	GetMouseInput()
-
-	WaitForAnyKeyPress()
+	GetMouseInput(gridLabels,gridText,selLabels)
 }
 
-define GetMouseInput()
+define GetMouseInput(gridLabels,gridText,selLabels)
 {
 	ShowCursor(1)
 	SetMouseCursorPosition(Round(gVideoWidth/2), Round(gVideoHeight/2))
-	WaitForAnyKeyPress()
+
+	chkLabels<-[]
+	chkText<-[]
+	i<-1
+	while ( i <= Length( gridLabels ) )
+	{
+		PushOnEnd( chkLabels, Nth(gridLabels, i ) )
+		PushOnEnd( chkText, Nth(gridText, i ) )
+		i<-i+1
+	}
+
+	clearText<-"clr"
+	okText<-"ok"
+	delText<-"del"
+
+
+	rval<-[]
+	done<-0
+	while ( done == 0 )
+	{
+		resp<-WaitForClickOnTarget( chkLabels, chkText )
+
+		if ( resp == clearText )
+		{
+			# TODO
+		} elseif( resp == okText )
+		{
+			# TODO
+		} elseif( resp == delText )
+		{
+			# TODO
+		} else
+		{
+			PushOnEnd(rval, resp )
+			SetText( Nth(selLabels, Length(rval)), resp )
+			Draw()
+		}
+
+		if ( Length( rval) == Length( selLabels ) )
+		{
+			# actually want to enable the OK label 
+			done<-1
+		}
+	}
 	ShowCursor(0)
+
+	return rval
 }
 
 define DrawDebug()
