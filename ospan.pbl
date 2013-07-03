@@ -95,7 +95,7 @@ define PresentRun(aNumLetters)
 	i<-1
 	while ( i <= Length(testVals))
 	{
-		PushOnEnd(selLabels, MakeLabel( "*", gLgFont ) )	
+		PushOnEnd(selLabels, MakeLabel( gNoSelectionChar, gLgFont ) )	
 		Move(Nth(selLabels,i), gridLeft + ( i - 1 ) * gridSpace, gridTop )
 		AddObject(Nth(selLabels,i), gWin )
 		i<-i+1
@@ -107,16 +107,25 @@ define PresentRun(aNumLetters)
 	# put these a little below the selection row
 	gridTop<-Round(gridTop * 1.1 )
 	okLabel<-MakeLabel("Done", gLgFont_Disabled)
-	Move( okLabel, gridLeft + ( i - 1 ) * gridSpace, gridTop )
+	Move( okLabel, gridLeft + ( i - 1 ) * gridSpace, gridTop )	# i was incremented after adding last
 	AddObject( okLabel , gWin )
+
+	delLabel<-MakeLabel("Del", gLgFont )
+	AddObject( delLabel, gWin )
+	Move( delLabel, gridLeft - gridSpace, gridTop )
+
+	#clrLabel<-MakeLabel("Clear", gLgFont )
+	#AddObject( clrLabel, gWin )
+	#Move( clrLabel, gridLeft - 2*gridSpace-Nth(GetSize(delLabel),1), gridTop )
 
 	Draw()
 
 	# get input
-	GetMouseInput(gridLabels,gridText,selLabels,okLabel)
+	userInput<-GetMouseInput(gridLabels,gridText,selLabels,okLabel,delLabel)
+	PrefixPrintList("UserInput", userInput )
 }
 
-define GetMouseInput(gridLabels,gridText,selLabels,okLabel)
+define GetMouseInput(gridLabels,gridText,selLabels,okLabel,delLabel)
 {
 	ShowCursor(1)
 	SetMouseCursorPosition(Round(gVideoWidth/2), Round(gVideoHeight/2))
@@ -138,6 +147,9 @@ define GetMouseInput(gridLabels,gridText,selLabels,okLabel)
 	PushOnEnd( chkLabels, okLabel )
 	PushOnEnd( chkText, okText )
 
+	PushOnEnd( chkLabels, delLabel )
+	PushOnEnd( chkText, delText )
+
 	rval<-[]
 	done<-0
 	while ( done == 0 )
@@ -157,10 +169,20 @@ define GetMouseInput(gridLabels,gridText,selLabels,okLabel)
 			}
 		} elseif( resp == delText )
 		{
-			# TODO
-			SetFont( okLabel,	gLgFont_Disabled )
+			if ( Length( rval ) > 0 )
+			{
+				SetFont( okLabel,	gLgFont_Disabled )
+				removed<-Nth(rval, Length(rval))
+				if ( not gDisableGridSelections == 0 )
+				{
+					idx<-FindFirstIndex( chkText, removed )
+					SetFont( Nth(chkLabels, idx ), gLgFont )
+				}
+				SetText( Nth(selLabels, Length(rval)), gNoSelectionChar )
+				rval<-RemoveSubset(rval, List(Length(rval)))
 
-			Draw()
+				Draw()
+			}
 		} elseif ( Length(rval) < Length(selLabels) )
 		{
 			if ( not IsMember( resp, rval ) )
@@ -224,6 +246,7 @@ define Start(par)
 	# when a user selects a grid item, draw it as disabled to 
 	# suggest they can't select again
 	gDisableGridSelections<-1
+	gNoSelectionChar<-"*"
 
 	gLgFontSz<-40
   gLgFont <- MakeFont("Vera.ttf",0,gLgFontSz,gFGColor,gBGColor,0)
