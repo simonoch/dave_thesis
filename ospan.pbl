@@ -1,4 +1,21 @@
+define FindFirstIndex( aList, aItem )
+{
+	rval<-0
+	found<-0
 
+	Loop( item, aLIst )
+	{
+		if ( found ==0 )
+		{
+			rval<-rval+1 
+			if ( item == aItem )
+			{
+				found<-1
+			}
+		}
+	}
+	return rval
+}
 
 define PrefixPrintList(aPrefix,aList)
 {
@@ -84,13 +101,22 @@ define PresentRun(aNumLetters)
 		i<-i+1
 	}
 
+	delLabel<-MakeLabel("Del", gLgFont)
+	clearLabel<-MakeLabel("Clear", gLgFont)
+
+	# put these a little below the selection row
+	gridTop<-Round(gridTop * 1.1 )
+	okLabel<-MakeLabel("Done", gLgFont_Disabled)
+	Move( okLabel, gridLeft + ( i - 1 ) * gridSpace, gridTop )
+	AddObject( okLabel , gWin )
+
 	Draw()
 
 	# get input
-	GetMouseInput(gridLabels,gridText,selLabels)
+	GetMouseInput(gridLabels,gridText,selLabels,okLabel)
 }
 
-define GetMouseInput(gridLabels,gridText,selLabels)
+define GetMouseInput(gridLabels,gridText,selLabels,okLabel)
 {
 	ShowCursor(1)
 	SetMouseCursorPosition(Round(gVideoWidth/2), Round(gVideoHeight/2))
@@ -109,6 +135,8 @@ define GetMouseInput(gridLabels,gridText,selLabels)
 	okText<-"ok"
 	delText<-"del"
 
+	PushOnEnd( chkLabels, okLabel )
+	PushOnEnd( chkText, okText )
 
 	rval<-[]
 	done<-0
@@ -119,24 +147,41 @@ define GetMouseInput(gridLabels,gridText,selLabels)
 		if ( resp == clearText )
 		{
 			# TODO
-		} elseif( resp == okText )
-		{
-			# TODO
+			SetFont( okLabel,	gLgFont_Disabled )
+
+			Draw()
+		} elseif( resp == okText ) {
+			if ( Length(rval) == Length(selLabels) )
+			{
+				done<-1
+			}
 		} elseif( resp == delText )
 		{
 			# TODO
-		} else
-		{
-			PushOnEnd(rval, resp )
-			SetText( Nth(selLabels, Length(rval)), resp )
-			Draw()
-		}
+			SetFont( okLabel,	gLgFont_Disabled )
 
-		if ( Length( rval) == Length( selLabels ) )
+			Draw()
+		} elseif ( Length(rval) < Length(selLabels) )
 		{
-			# actually want to enable the OK label 
-			done<-1
-		}
+			if ( not IsMember( resp, rval ) )
+			{
+				PushOnEnd(rval, resp )
+				SetText( Nth(selLabels, Length(rval)), resp )
+
+				if ( not gDisableGridSelections == 0 )
+				{
+					idx<-FindFirstIndex( chkText, resp )
+					SetFont( Nth(chkLabels, idx ), gLgFont_Disabled )
+				}
+
+				if ( Length(rval) == Length(selLabels) )
+				{
+					# make the done label look clickable
+					SetFont( okLabel,	gLgFont )
+				}
+				Draw()
+			}
+		} 
 	}
 	ShowCursor(0)
 
@@ -171,12 +216,18 @@ define Start(par)
 	gGridNumRow<-4
 
 	gFGColor <- MakeColor("black")
+	gFGDisabledColor <- MakeColor("grey")
 	gBGColor <- MakeColor("white")
 
 	gDbgColor <-MakeColor("grey90")
 
+	# when a user selects a grid item, draw it as disabled to 
+	# suggest they can't select again
+	gDisableGridSelections<-1
+
 	gLgFontSz<-40
   gLgFont <- MakeFont("Vera.ttf",0,gLgFontSz,gFGColor,gBGColor,0)
+  gLgFont_Disabled <- MakeFont("Vera.ttf",0,gLgFontSz,gFGDisabledColor,gBGColor,0)
 	gSmlFont<- MakeFont( "Vera.ttf",0,20,gFGColor,gBGColor,0)
 	gDbgFont<-MakeFont(  "Vera.ttf",0,20,gDbgColor,gBGColor,0)
 
