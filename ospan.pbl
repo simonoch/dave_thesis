@@ -105,7 +105,8 @@ define PresentRun(aNumLetters)
 	clearLabel<-MakeLabel("Clear", gLgFont)
 
 	# put these a little below the selection row
-	gridTop<-Round(gridTop * 1.1 )
+	#gridTop<-Round(gridTop * 1.1 )
+	gridTop<-gridTop+1*gridSpace
 	okLabel<-MakeLabel("Done", gLgFont_Disabled)
 	Move( okLabel, gridLeft + ( i - 1 ) * gridSpace, gridTop )	# i was incremented after adding last
 	AddObject( okLabel , gWin )
