@@ -272,13 +272,7 @@ define Start(par)
 	gDbgFont<-MakeFont(  "Vera.ttf",0,20,gDbgColor,gBGColor,0)
 
   gWin <- MakeWindow("white")
-	DrawDebug()
+	#DrawDebug()
 
-
-	#Draw()
-	#WaitForAnyKeyPress()
-
-  #s<-SampleN(  ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"], gGridNumCol * gGridNumRow)
-	#PrintList(s)
 	PresentRun(5)
 }
