@@ -245,13 +245,47 @@ define DrawDebug()
 	AddObject( gXAxis, gWin )
 }
 
-define Start(par)
+define ParseArgs(args)
 {
-	ShowCursor(0)
+	Loop( arg, args )
+	{
+		toks<-SplitString(arg,"=")
+		if ( not Length( toks ) == 2 )
+		{
+			SignalFatalError( "Invalid Argument: " + arg )
+		}
+		argname<-Lowercase(Nth(toks,1))
+		argval<-Nth(toks,2)
 
-	gDispMS <- 500
+		if ( argname == "dispms" )
+		{
+			gDispMS<-ToNumber( argval )
+			if ( gDispMS < 5 or gDispMS > 5000 )
+			{
+				SignalFatalError( "Invalid milliseconds value for DispMS")
+			}
 
-	# globals
+
+		} else
+		{
+			Usage()
+			SignalFatalError( "Unknown Argument: " + arg )
+		}
+	}
+}
+
+define Usage()
+{
+	Print( "Arguments" )
+	Print( " -V DispMS=<milliseconds> # Time each stimulus letter shown. Default 1000" )
+
+}
+
+define InitDefaults()
+{
+	# how long Target Letters are shown for
+	gDispMS <- 1000
+
 	gGridNumCol<-3
 	gGridNumRow<-4
 
@@ -273,6 +307,14 @@ define Start(par)
 	gDbgFont<-MakeFont(  "Vera.ttf",0,20,gDbgColor,gBGColor,0)
 
   gWin <- MakeWindow("white")
+}
+
+define Start(par)
+{
+	ShowCursor(0)
+	InitDefaults()
+	ParseArgs(par)
+
 	#DrawDebug()
 
 	PresentRun(5)
