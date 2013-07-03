@@ -114,18 +114,18 @@ define PresentRun(aNumLetters)
 	AddObject( delLabel, gWin )
 	Move( delLabel, gridLeft - gridSpace, gridTop )
 
-	#clrLabel<-MakeLabel("Clear", gLgFont )
-	#AddObject( clrLabel, gWin )
-	#Move( clrLabel, gridLeft - 2*gridSpace-Nth(GetSize(delLabel),1), gridTop )
+	clrLabel<-MakeLabel("Clear", gLgFont )
+	AddObject( clrLabel, gWin )
+	Move( clrLabel, gridLeft - 2*gridSpace-Nth(GetSize(delLabel),1), gridTop )
 
 	Draw()
 
 	# get input
-	userInput<-GetMouseInput(gridLabels,gridText,selLabels,okLabel,delLabel)
+	userInput<-GetMouseInput(gridLabels,gridText,selLabels,okLabel,delLabel,clrLabel)
 	PrefixPrintList("UserInput", userInput )
 }
 
-define GetMouseInput(gridLabels,gridText,selLabels,okLabel,delLabel)
+define GetMouseInput(gridLabels,gridText,selLabels,okLabel,delLabel,clrLabel)
 {
 	ShowCursor(1)
 	SetMouseCursorPosition(Round(gVideoWidth/2), Round(gVideoHeight/2))
@@ -150,6 +150,9 @@ define GetMouseInput(gridLabels,gridText,selLabels,okLabel,delLabel)
 	PushOnEnd( chkLabels, delLabel )
 	PushOnEnd( chkText, delText )
 
+	PushOnEnd( chkLabels, clrLabel )
+	PushOnEnd( chkText, clearText )
+
 	rval<-[]
 	done<-0
 	while ( done == 0 )
@@ -158,10 +161,24 @@ define GetMouseInput(gridLabels,gridText,selLabels,okLabel,delLabel)
 
 		if ( resp == clearText )
 		{
-			# TODO
-			SetFont( okLabel,	gLgFont_Disabled )
-
-			Draw()
+			if ( Length(rval ) > 0 )
+			{
+				SetFont( okLabel,	gLgFont_Disabled )
+				if ( not gDisableGridSelections == 0 )
+				{
+					Loop( removed, rval )
+					{
+						idx<-FindFirstIndex( chkText, removed )
+						SetFont( Nth(chkLabels, idx ), gLgFont )
+					}
+				}
+				Loop( selLabel, selLabels )
+				{
+					SetText( selLabel, gNoSelectionChar )
+				}
+				rval<-[]
+				Draw()
+			}
 		} elseif( resp == okText ) {
 			if ( Length(rval) == Length(selLabels) )
 			{
