@@ -72,31 +72,38 @@ define PresentRun(aNumLetters)
 
 	i <- 1
 	gridLabels<-[]
-	xOffset<-0
-	yOffset<-0
+	gridXIdx<-0
+	gridYIdx<-0
 	while ( i <= gGridNumCol * gGridNumRow )
 	{
-		xOffset <- Mod( i-1, gGridNumCol)
-		yOffset <- Floor((i-1) / gGridNumCol)
+		gridXIdx <- Mod( i-1, gGridNumCol)
+		gridYIdx <- Floor((i-1) / gGridNumCol)
 
 		PushOnEnd(gridLabels, MakeLabel(Nth(gridText,i), gLgFont) )
 
-		Move(Nth(gridLabels,i), gridLeft + xOffset * gridSpace, gridTop + yOffset * gridSpace ) 
+		Move(Nth(gridLabels,i), gridLeft + gridXIdx * gridSpace, gridTop + gridYIdx * gridSpace ) 
 		AddObject(Nth(gridLabels,i),gWin)
 
 		i<-i+1
 	}
 
+	if ( gDrawDebug )
+	{
+		gLeftLine<-ThickLine(gridLeft, 0, gridLeft, gVideoHeight, 2, gDbgColor )
+		AddObject( gLeftLine, gWin )
+	}
+
+
 	# the grid/row of user selections	
-	gridTop<-gridTop + yOffset * gridSpace + 1.5 * gridSpace
-	gridLeft<-gVideoWidth/2-gridSpace*(Length(testVals)-1)*0.5
+	gridTop<-gridTop + gridYIdx * gridSpace + 1.5 * gridSpace
+	selLeft<-gVideoWidth/2-gridSpace*(Length(testVals)-1)*0.5
 
 	selLabels<-[]
 	i<-1
 	while ( i <= Length(testVals))
 	{
 		PushOnEnd(selLabels, MakeLabel( gNoSelectionChar, gLgFont ) )	
-		Move(Nth(selLabels,i), gridLeft + ( i - 1 ) * gridSpace, gridTop )
+		Move(Nth(selLabels,i), selLeft + ( i - 1 ) * gridSpace, gridTop )
 		AddObject(Nth(selLabels,i), gWin )
 		i<-i+1
 	}
@@ -107,10 +114,12 @@ define PresentRun(aNumLetters)
 	# put these a little below the selection row
 	#gridTop<-Round(gridTop * 1.1 )
 	gridTop<-gridTop+1*gridSpace
+
 	okLabel<-MakeLabel("Done", gLgFont_Disabled)
-	Move( okLabel, gridLeft + ( i - 1 ) * gridSpace, gridTop )	# i was incremented after adding last
+	Move( okLabel, gridLeft + gridXIdx * gridSpace + gridSpace, gridTop )
 	AddObject( okLabel , gWin )
 
+	
 	delLabel<-MakeLabel("Del", gLgFont )
 	AddObject( delLabel, gWin )
 	Move( delLabel, gridLeft - gridSpace, gridTop )
@@ -228,21 +237,25 @@ define GetMouseInput(gridLabels,gridText,selLabels,okLabel,delLabel,clrLabel)
 	return rval
 }
 
-define DrawDebug()
+define DrawDebug(val)
 {
-	gDebugLab1<-MakeLabel("gVideoWidth="+gVideoWidth, gDbgFont)
-	AddObject( gDebugLab1, gWin )
-	Move( gDebugLab1, 100, 10 )
+	if ( val == 1 )
+	{
+		gDebugLab1<-MakeLabel("gVideoWidth="+gVideoWidth, gDbgFont)
+		AddObject( gDebugLab1, gWin )
+		Move( gDebugLab1, 100, 10 )
 
-	gDebugLab2<-MakeLabel("gVideoHeight="+gVideoHeight, gDbgFont)
-	Move( gDebugLab2, 110, 30 )
-	AddObject( gDebugLab2, gWin )
+		gDebugLab2<-MakeLabel("gVideoHeight="+gVideoHeight, gDbgFont)
+		Move( gDebugLab2, 110, 30 )
+		AddObject( gDebugLab2, gWin )
 
-	gYAxis<-ThickLine(gVideoWidth/2, 0, gVideoWidth/2, gVideoHeight, 2, gDbgColor )
-	AddObject( gYAxis, gWin )
+		gYAxis<-ThickLine(gVideoWidth/2, 0, gVideoWidth/2, gVideoHeight, 2, gDbgColor )
+		AddObject( gYAxis, gWin )
 
-	gXAxis<-ThickLine(0, gVideoHeight/2, gVideoWidth, gVideoHeight/2, 2, gDbgColor )
-	AddObject( gXAxis, gWin )
+		gXAxis<-ThickLine(0, gVideoHeight/2, gVideoWidth, gVideoHeight/2, 2, gDbgColor )
+		AddObject( gXAxis, gWin )
+	}
+	return val
 }
 
 define ParseArgs(args)
@@ -266,6 +279,16 @@ define ParseArgs(args)
 			}
 
 
+		} elseif ( argname == "drawdebug" )
+		{
+			gDrawDebug<-ToNumber( argval )
+			if ( gDrawDebug < 1 )
+			{
+				gDrawDebug <- 0
+			} else
+			{
+				gDrawDebug <- 1
+			}
 		} else
 		{
 			Usage()
@@ -306,6 +329,8 @@ define InitDefaults()
 	gSmlFont<- MakeFont( "Vera.ttf",0,20,gFGColor,gBGColor,0)
 	gDbgFont<-MakeFont(  "Vera.ttf",0,20,gDbgColor,gBGColor,0)
 
+	gDrawDebug<-0
+
   gWin <- MakeWindow("white")
 }
 
@@ -315,7 +340,7 @@ define Start(par)
 	InitDefaults()
 	ParseArgs(par)
 
-	#DrawDebug()
+	gDrawDebug<-DrawDebug(gDrawDebug)
 
 	PresentRun(5)
 }
