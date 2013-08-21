@@ -62,13 +62,18 @@ define PresentRun(aNumLetters)
 		RemoveObject(lText,gWin)
 	}
 
-	gridSpace <- 3 * gLgFontSz
+	gridSpace <- 2.5 * gLgFontSz
 	gridTop <- gVideoHeight/2
 	gridLeft <- gVideoWidth/2
 
 	# the main grid of letters
 	gridTop<-gridTop-gridSpace*(gGridNumRow-1)*0.5
 	gridLeft<-gridLeft-gridSpace*(gGridNumCol-1)*0.5
+
+	# move the grid up so we can get the blank key in there
+	blankOffset <- gridSpace #2 * gLgFontSz
+	gridTop<- gridTop-blankOffset
+
 
 	i <- 1
 	gridLabels<-[]
@@ -92,6 +97,16 @@ define PresentRun(aNumLetters)
 		gLeftLine<-ThickLine(gridLeft, 0, gridLeft, gVideoHeight, 2, gDbgColor )
 		AddObject( gLeftLine, gWin )
 	}
+
+	# let's add the blank key...
+	blankLabel<-MakeLabel("Blank", gLgFont )
+	gridYIdx <- Floor((i-1) / gGridNumCol)
+	Move( blankLabel, gVideoWidth/2, gridTop + gridYIdx * gridSpace ) 
+	AddObject( blankLabel, gWin )
+		
+
+	# remove the blankOffset
+	#gridTop<- gridTop+blankOffset
 
 
 	# the grid/row of user selections	
