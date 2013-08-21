@@ -74,8 +74,10 @@ define PresentRun(aNumLetters)
 	blankOffset <- gridSpace #2 * gLgFontSz
 	gridTop<- gridTop-blankOffset
 
+	xxxdone<-0
 
 	i <- 1
+	keys<-[]
 	gridLabels<-[]
 	gridXIdx<-0
 	gridYIdx<-0
@@ -86,6 +88,14 @@ define PresentRun(aNumLetters)
 
 		PushOnEnd(gridLabels, MakeLabel(Nth(gridText,i), gLgFont) )
 
+		xxxdone <- xxxdone + 1
+		if ( xxxdone > 0 )
+		{
+			PushOnEnd( keys, Square(gridLeft + gridXIdx * gridSpace, gridTop + gridYIdx * gridSpace, gKeyHeight+4, gKeyBorder, 1 ) )
+			AddObject( Last( keys), gWin )
+			PushOnEnd( keys, Square(gridLeft + gridXIdx * gridSpace, gridTop + gridYIdx * gridSpace, gKeyHeight, gKeyFace, 1 ) )
+			AddObject( Last( keys), gWin )
+		}
 		Move(Nth(gridLabels,i), gridLeft + gridXIdx * gridSpace, gridTop + gridYIdx * gridSpace ) 
 		AddObject(Nth(gridLabels,i),gWin)
 
@@ -328,8 +338,10 @@ define InitDefaults()
 	gGridNumRow<-4
 
 	gFGColor <- MakeColor("black")
-	gFGDisabledColor <- MakeColor("grey")
+	gFGDisabledColor <- MakeColor("grey55")
 	gBGColor <- MakeColor("white")
+	gKeyBorder<-MakeColor( "grey20" )
+	gKeyFace<-MakeColor( "grey90" )
 
 	gDbgColor <-MakeColor("grey90")
 
@@ -339,6 +351,8 @@ define InitDefaults()
 	gNoSelectionChar<-"*"
 
 	gLgFontSz<-40
+	gKeyHeight<-2.1*gLgFontSz
+
   gLgFont <- MakeFont("Vera.ttf",0,gLgFontSz,gFGColor,gBGColor,0)
   gLgFont_Disabled <- MakeFont("Vera.ttf",0,gLgFontSz,gFGDisabledColor,gBGColor,0)
 	gSmlFont<- MakeFont( "Vera.ttf",0,20,gFGColor,gBGColor,0)
