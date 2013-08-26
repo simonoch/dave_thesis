@@ -36,16 +36,25 @@ define Start(p)
 {
 	InitDefaults()
 	win <- MakeWindow("white")
-	keys <- [["1","2","3","4","5","6","7","8","9","0"],
-		["A","B","C","D","E","F","G","H","I","J"],
-		["K","L","M","N","O","P","Q","R","S","T"],
-		["U","V","W","X","Y","Z"]]
-	nCol<-10
-	resp <- VKeyboardInput(win,"keyboard", Flatten( keys ), nCol)
+	keys <- ["1","2","3","4","5","6","7","8","Z" ]
+	nCol<-3
+	kb <- MakeKB(win, keys, nCol)
+
+	#kb =[clicks,xExtent,yExtent, stuff]
+
+	labtext <- ""
+	resp <- ""
+	while(not resp == "Z")
+	{
+		resp <- WaitForClickOnTarget(Nth(kb,1), keys)
+		labtext <- labtext + resp
+		Print( "Pressed: " + resp )
+	}
 }
 
-define VKeyboardInput(win,type, keys, nCol )
+define MakeKB(win, keys, nCol )
 {
+	rval<-[]
 	gridTop <- 0
 	gridLeft <- 0
 
@@ -56,6 +65,8 @@ define VKeyboardInput(win,type, keys, nCol )
 	cellsz <-keysize+gap
 
 
+	xExtent<-gridLeft
+	yExtent<-gridTop
 	clicks <- []
 	stuff <- []
 	i<-1
@@ -71,20 +82,33 @@ define VKeyboardInput(win,type, keys, nCol )
 		AddObject(back1,win)
 		AddObject(back2,win)
 		AddObject(lab,win)
-		Move(lab,gridLeft+colnum*cellsz,gridTop+rownum*cellsz)
-
+		x<-gridLeft+colnum*cellsz
+		y<-gridTop+rownum*cellsz
+		Move(lab,x,y)
+		if ( x > xExtent )
+		{
+			xExtend <- x
+		}
+		if ( y > yExtent )
+		{
+			yExtent <- y
+		}
 		clicks <- Append(clicks,back1)
 		stuff <- Append(stuff,[lab,back1,back2])
 	}
 	Draw()
 
-	labtext <- ""
-	resp <- ""
-	while(not resp == "Z")
-	{
-		resp <- WaitForClickOnTarget(clicks,keys)
-		labtext <- labtext + resp
-		Print( "Pressed: " + resp )
-	}
-	return labtext
+	rval<-[clicks,xExtent,yExtent, stuff]
+
+	return rval
+
+#	labtext <- ""
+#	resp <- ""
+#	while(not resp == "Z")
+#	{
+#		resp <- WaitForClickOnTarget(clicks,keys)
+#		labtext <- labtext + resp
+#		Print( "Pressed: " + resp )
+#	}
+#	return labtext
 }
