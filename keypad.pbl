@@ -41,8 +41,9 @@ define Start(p)
 
 	#kb =[clicks,xExtent,yExtent, stuff]
 
-	kb1 <- MakeKB(win, keys, 0, 0, nCol)
-	kb <- MakeKB( win, keys, Nth(kb1, 2), Nth(kb1, 3), nCol )
+	#kb <- MakeSqKB(win, keys, 0, 0, nCol, 1.9 * gLgFontSz )
+	kb1 <- MakeSqKB(win, keys, 0, 0, nCol, 1.9 * gLgFontSz )
+	kb <- MakeSqKB( win, keys, Nth(kb1, 2), Nth(kb1, 3), nCol, 1.9 * gLgFontSz  )
 
 	labtext <- ""
 	resp <- ""
@@ -54,14 +55,21 @@ define Start(p)
 	}
 }
 
-define MakeKB(win, keys, kbTop, kbLeft, nCol  )
+define MakeSqKB(win, keys, kbTop, kbLeft, nCol, keySz  )
+{
+	return MakeKB( win, keys, kbTop, kbLeft, nCol, keySz, keySz  )
+}
+
+define MakeKB(win, keys, kbTop, kbLeft, nCol, keyWidth, keyHeight  )
 {
 	spc<-10
 	border<-4
+
+	cellWidth<-keyWidth+spc
+	cellHeight<-keyHeight+spc
 	
-	#keysize <- 60
-	keysize <- 1.9 * gLgFontSz
-	cellsz <-keysize+spc
+	#keysize <- 1.9 * fontSz
+	#cellsz <-keysize+spc
 
 	xExtent<-kbLeft
 	yExtent<-kbTop
@@ -74,16 +82,16 @@ define MakeKB(win, keys, kbTop, kbLeft, nCol  )
 		rownum <- Floor( (i-1)/nCol )
 		i<-i+1
 		
-		back1 <- Square(kbLeft+colnum*cellsz,kbTop+rownum*cellsz,keysize,gKeyBorder,1)
-		back2 <- Square(kbLeft+colnum*cellsz,kbTop+rownum*cellsz,keysize-4,gKeyFace,1)
+		back1 <- Rectangle(kbLeft+colnum*cellWidth,kbTop+rownum*cellHeight,keyWidth, keyHeight,gKeyBorder,1)
+		back2 <- Rectangle(kbLeft+colnum*cellWidth,kbTop+rownum*cellHeight,keyWidth-4,keyHeight-4, gKeyFace,1)
 		lab <- MakeLabel(aKey,gLgFont)
 		AddObject(back1,win)
 		AddObject(back2,win)
 		AddObject(lab,win)
-		x<-kbLeft+colnum*cellsz
-		y<-kbTop+rownum*cellsz
+		x<-kbLeft+colnum*cellWidth
+		y<-kbTop+rownum*cellHeight
 		Move(lab,x,y)
-		if ( x > xExtent ) { xExtend <- x }
+		if ( x > xExtent ) { xExtent <- x }
 		if ( y > yExtent ) { yExtent <- y }
 		clicks <- Append(clicks,back1)
 		stuff <- Append(stuff,[lab,back1,back2])
