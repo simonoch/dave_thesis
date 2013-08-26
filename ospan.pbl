@@ -104,7 +104,7 @@ define PresentRun(aNumLetters)
 	# blank key
 	blankX<- currX + (Nth(padKb, 2) - currX)/2
 	blankY<-Nth(padKb, 3)+keyHeight+spc
-	blankKey <- ["Blank"]
+	blankKey <- [gBlankKeyText]
 	blankWidth<- ( Nth(padKb, 2) - currX ) + keyHeight # width==height
 	blankKb <- MakeKB( gWin, blankKey, blankX, blankY, 1, blankWidth, keyHeight, spc  )
 
@@ -130,7 +130,8 @@ define PresentRun(aNumLetters)
 
 	# the clear/del kb
 	cdKeyWidth<-2 * keyHeight
-	cdKeys <- ["Clear","Del", "Done"]
+	#cdKeys <- ["Clear","Del", "Done"]
+	cdKeys <- [gClearKeyText,gDelKeyText,gDoneKeyText]
 	cdX<-gVideoWidth/2
 	cdX<- cdX - ( cdKeyWidth + spc ) #- ( gVideoWidth/2 - # position
 	cdY<-selLabelY + cellHeight + padUserInput
@@ -142,42 +143,117 @@ define PresentRun(aNumLetters)
 	allLabels<-Flatten([allLabels, GetLabels(cdKb)] )
 
 
+	userInput<-NewGetMouseInput( allClickable, allVals, allLabels, selLabels )
+	PrefixPrintList("UserInput:", userInput )
 
-#
-#	delLabel<-MakeLabel("Del", gLgFont)
-#	clearLabel<-MakeLabel("Clear", gLgFont)
-#
-#	# put these a little below the selection row
-#	#gridTop<-Round(gridTop * 1.1 )
-#	gridTop<-gridTop+1*gridSpace
-#
-#	okLabel<-MakeLabel("Done", gLgFont_Disabled)
-#	Move( okLabel, gridLeft + gridXIdx * gridSpace + gridSpace, gridTop )
-#	AddObject( okLabel , gWin )
-#
-#	
-#	delLabel<-MakeLabel("Del", gLgFont )
-#	AddObject( delLabel, gWin )
-#	Move( delLabel, gridLeft - gridSpace, gridTop )
-#
-#	clrLabel<-MakeLabel("Clear", gLgFont )
-#	AddObject( clrLabel, gWin )
-#	Move( clrLabel, gridLeft - 2*gridSpace-Nth(GetSize(delLabel),1), gridTop )
-#
-#	Draw()
-#
-#	# get input
-#	#userInput<-GetMouseInput(ReverseList(gridKeys),gridText,selLabels,okLabel,delLabel,clrLabel)
-#	#PrefixPrintList("UserInput", userInput )
-	WaitForAnyKeyPress()
 
-	DestroyKB( cdKb )
+	DestroyKB( gWin, cdKb )
 	Loop( l, selLabels)
 	{
 		RemoveObject( l, gWin)
 	}
-	DestroyKB( blankKb )
-	DestroyKB( padKb )
+	DestroyKB( gWin, blankKb )
+	DestroyKB( gWin, padKb )
+}
+
+define NewGetMouseInput( clickable, values, keyLabels, selLabels )
+{
+	ShowCursor(1)
+	SetMouseCursorPosition(Round(gVideoWidth/2), Round(gVideoHeight/2))
+
+	idxDone <- FindFirstIndex( values, gDoneKeyText )
+	idxClear <- FindFirstIndex( values, gClearKeyText )
+	idxDel <- FindFirstIndex( values, gDelKeyText )
+
+	SetFont( Nth(keyLabels, idxDone),	gLgFont_Disabled )
+	SetFont( Nth(keyLabels, idxClear),	gLgFont_Disabled )
+	SetFont( Nth(keyLabels, idxDel),	gLgFont_Disabled )
+	Draw()
+
+	if ( idxDone < 1 or idxClear < 1 or idxDel < 1 )
+	{
+		SignalFatalError( "COuldn't find control keys!" )
+	}
+
+	rval<-[]
+	done<-0 
+	while ( done == 0 )
+	{
+		resp<-WaitForClickOnTarget( clickable, values )
+		if ( resp == gDoneKeyText )
+		{
+			# only valid if all values have been filled in
+			if ( Length( rval) == Length(selLabels))
+			{
+				done <- 1
+			}
+		} elseif( resp == gClearKeyText )
+		{
+#			if ( Length( rval ) > 0 )
+#			{
+#				# only valid if we have some values
+#				# - clear them all
+#				# first re-enable any that've been disabeld
+#				Loop( sel, rval )
+#				{
+#					idx=FindFirstIndex( sel, values )
+#					if ( idx > 0 )
+#					{
+#						SetFont( Nth( keyLabels, idx ), gLgFont )
+#					}
+#				}
+#				rval<-[]
+#
+#				# disable all control buttons
+#				SetFont( Nth(keyLabels, idxDone),	gLgFont_Disabled )
+#				SetFont( Nth(keyLabels, idxClear),	gLgFont_Disabled )
+#				SetFont( Nth(keyLabels, idxDel),	gLgFont_Disabled )
+#
+#				# remove all selLabel text
+#				Loop( sl, selLabels )
+#				{
+#					SetText( sl, gNoSelectionChar )
+#				}
+#				# finally re-draw
+#				Draw()
+#			}
+		} elseif( resp == gDelKeyText )
+		{
+			#if ( Length( rval ) > 0 )
+			#{
+				## only valid if we have some values
+				## - delete the last character selected
+				#rval<-RemoveSubset(rval, List(Length(rval)))
+
+				#SetFont( Nth(keyLabels, idxDone),	gLgFont_Disabled )
+
+				#SetFont( Nth(keyLabels, idxClear),	gLgFont_Disabled )
+				#SetFont( Nth(keyLabels, idxDel),	gLgFont_Disabled )
+
+				#Draw()
+			#}
+		} elseif ( Length( rval ) <= Length( selLabels ) )
+		{
+			if ( resp == gBlankKeyText )
+			{
+				rval<-Append(rval, gUnknownValue )
+				SetText( Nth(selLabels, Length(rval)), gUnknownValue )
+				if ( Length( rval ) == Length( selLabels ) )
+				{
+					SetFont( Nth( keyLabels, idxDone ), gLgFont )
+				}
+				Draw()
+			} elseif ( FindFirstIndex( rval, resp ) == 0 )
+			{
+				# Not already selected
+
+				Draw()
+			}
+
+		}
+	} 
+
+	return rval
 }
 
 define GetMouseInput(gridLabels,gridText,selLabels,okLabel,delLabel,clrLabel)
@@ -366,6 +442,11 @@ define InitDefaults()
 	gGridNumCol<-3
 	gGridNumRow<-4
 
+	gDoneKeyText <- "Done"
+	gClearKeyText <- "Clear"
+	gDelKeyText <- "Del"
+	gBlankKeyText <- "Blank"
+
 	gFGColor <- MakeColor("black")
 	gFGDisabledColor <- MakeColor("grey55")
 	gBGColor <- MakeColor("white")
@@ -378,6 +459,7 @@ define InitDefaults()
 	# suggest they can't select again
 	gDisableGridSelections<-1
 	gNoSelectionChar<-"*"
+	gUnknownValue<-"_"
 
 	gLgFontSz<-40
 	gKeyHeight<-2.1*gLgFontSz
