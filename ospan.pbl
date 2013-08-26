@@ -176,7 +176,7 @@ define NewGetMouseInput( clickable, values, keyLabels, selLabels )
 
 	if ( idxDone < 1 or idxClear < 1 or idxDel < 1 )
 	{
-		SignalFatalError( "COuldn't find control keys!" )
+		SignalFatalError( "Couldn't find control keys!" )
 	}
 
 	rval<-[]
@@ -193,34 +193,34 @@ define NewGetMouseInput( clickable, values, keyLabels, selLabels )
 			}
 		} elseif( resp == gClearKeyText )
 		{
-#			if ( Length( rval ) > 0 )
-#			{
-#				# only valid if we have some values
-#				# - clear them all
-#				# first re-enable any that've been disabeld
-#				Loop( sel, rval )
-#				{
-#					idx=FindFirstIndex( sel, values )
-#					if ( idx > 0 )
-#					{
-#						SetFont( Nth( keyLabels, idx ), gLgFont )
-#					}
-#				}
-#				rval<-[]
-#
-#				# disable all control buttons
-#				SetFont( Nth(keyLabels, idxDone),	gLgFont_Disabled )
-#				SetFont( Nth(keyLabels, idxClear),	gLgFont_Disabled )
-#				SetFont( Nth(keyLabels, idxDel),	gLgFont_Disabled )
-#
-#				# remove all selLabel text
-#				Loop( sl, selLabels )
-#				{
-#					SetText( sl, gNoSelectionChar )
-#				}
-#				# finally re-draw
-#				Draw()
-#			}
+			if ( Length( rval ) > 0 )
+			{
+				# only valid if we have some values
+				# - clear them all
+				# first re-enable any that've been disabeld
+				Loop( sel, rval )
+				{
+					idx<-FindFirstIndex( values, sel )
+					if ( idx > 0 )
+					{
+						SetFont( Nth( keyLabels, idx ), gLgFont )
+					}
+				}
+				rval<-[]
+
+				# disable all control buttons
+				SetFont( Nth(keyLabels, idxDone),	gLgFont_Disabled )
+				SetFont( Nth(keyLabels, idxClear),	gLgFont_Disabled )
+				SetFont( Nth(keyLabels, idxDel),	gLgFont_Disabled )
+
+				# remove all selLabel text
+				Loop( sl, selLabels )
+				{
+					SetText( sl, gNoSelectionChar )
+				}
+				# finally re-draw
+				Draw()
+			}
 		} elseif( resp == gDelKeyText )
 		{
 			#if ( Length( rval ) > 0 )
