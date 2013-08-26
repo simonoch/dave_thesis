@@ -41,43 +41,40 @@ define Start(p)
 		["K","L","M","N","O","P","Q","R","S","T"],
 		["U","V","W","X","Y","Z"]]
 	nCol<-10
-	resp <- VKeyboardInput(win,"keyboard", keys, nCol)
+	resp <- VKeyboardInput(win,"keyboard", Flatten( keys ), nCol)
 }
 
-define VKeyboardInput(win,type, keys, nCol)
+define VKeyboardInput(win,type, keys, nCol )
 {
-	ybase <- 50
-	xbase <- 50
-	gap <- 70
-	keysize <- 60
+	gridTop <- 0
+	gridLeft <- 0
 
-##make an entry field label
-	label <- MakeLabel("[]",gLgFont)
-	AddObject(label,win)
-	Move(label,xbase + gap*(nCol+1)/2,ybase)
-	Draw(label)
+	gap<-10
+	
+	#keysize <- 60
+	keysize <- 1.9 * gLgFontSz
+	cellsz <-keysize+gap
 
-	rownum <- 1
+
 	clicks <- []
 	stuff <- []
-	loop(row,keys)
+	i<-1
+	loop(aKey,keys)
 	{
-		colnum <- 1
-		loop(col,row)
-		{
-			back1 <- Square(xbase+colnum*gap,ybase+rownum*gap,keysize,MakeColor("grey"),1)
-			back2 <- Square(xbase+colnum*gap,ybase+rownum*gap,keysize-4,MakeColor("grey20"),1)
-			lab <- MakeLabel(col,gLgFont)
-			AddObject(back1,win)
-			AddObject(back2,win)
-			AddObject(lab,win)
-			Move(lab,xbase+colnum*gap,ybase+rownum*gap)
+		colnum <- Mod( i-1, nCol )
+		rownum <- Floor( (i-1)/nCol )
+		i<-i+1
+		
+		back1 <- Square(gridLeft+colnum*cellsz,gridTop+rownum*cellsz,keysize,gKeyBorder,1)
+		back2 <- Square(gridLeft+colnum*cellsz,gridTop+rownum*cellsz,keysize-4,gKeyFace,1)
+		lab <- MakeLabel(aKey,gLgFont)
+		AddObject(back1,win)
+		AddObject(back2,win)
+		AddObject(lab,win)
+		Move(lab,gridLeft+colnum*cellsz,gridTop+rownum*cellsz)
 
-			colnum <- colnum + 1
-			clicks <- Append(clicks,back1)
-			stuff <- Append(stuff,[lab,back1,back2])
-		}
-		rownum <- rownum + 1
+		clicks <- Append(clicks,back1)
+		stuff <- Append(stuff,[lab,back1,back2])
 	}
 	Draw()
 
@@ -85,10 +82,9 @@ define VKeyboardInput(win,type, keys, nCol)
 	resp <- ""
 	while(not resp == "Z")
 	{
-		label.text <- labtext
-		Draw()
-		resp <- WaitForClickOnTarget(clicks,Flatten(keys))
+		resp <- WaitForClickOnTarget(clicks,keys)
 		labtext <- labtext + resp
+		Print( "Pressed: " + resp )
 	}
 	return labtext
 }
