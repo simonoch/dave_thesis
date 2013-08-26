@@ -223,19 +223,35 @@ define NewGetMouseInput( clickable, values, keyLabels, selLabels )
 			}
 		} elseif( resp == gDelKeyText )
 		{
-			#if ( Length( rval ) > 0 )
-			#{
-				## only valid if we have some values
-				## - delete the last character selected
-				#rval<-RemoveSubset(rval, List(Length(rval)))
+			if ( Length( rval ) > 0 )
+			{
+				# only valid if we have some values
+				# - delete the last character selected
 
-				#SetFont( Nth(keyLabels, idxDone),	gLgFont_Disabled )
+				# re-enable it's selection in keypad
+				deleted<-Last( rval )
+				idx<-FindFirstIndex( values, deleted )
+				if ( idx > 0 )
+				{
+					SetFont( Nth( keyLabels, idx), gLgFont )
+				}
 
-				#SetFont( Nth(keyLabels, idxClear),	gLgFont_Disabled )
-				#SetFont( Nth(keyLabels, idxDel),	gLgFont_Disabled )
+				# remove from selection & rval
+				SetText( Nth(selLabels, Length(rval)), gNoSelectionChar )
+				rval<-RemoveSubset(rval, List(Length(rval)))
 
-				#Draw()
-			#}
+				# definitely can't be don
+				SetFont( Nth(keyLabels, idxDone),	gLgFont_Disabled )
+				# may still be able to clear or delete
+				if ( Length( rval ) == 0 )
+				{
+					SetFont( Nth(keyLabels, idxClear),	gLgFont_Disabled )
+					SetFont( Nth(keyLabels, idxDel),	gLgFont_Disabled )
+				}
+
+				#finally draw
+				Draw()
+			}
 		} elseif ( Length( rval ) < Length( selLabels ) )
 		{
 			if ( resp == gBlankKeyText )
