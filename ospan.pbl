@@ -44,18 +44,6 @@ define PrintList(aList)
 	PrefixPrintList("",aList)
 }
 
-define ReverseList(aList)
-{
-	rval<-[]
-	i<-Length(aList)
-	while ( i > 0 )
-	{
-		rval<-Append(rval, Nth( aList, i ) )
-		i <- i-1
-	}
-	return rval
-}
-
 define LogSpam( str )
 {
 	Print( str )
@@ -134,23 +122,21 @@ define PresentRun(aNumLetters)
 
 	# the clear/del kb
 	cdKeyWidth<-2 * keyHeight
-	#cdKeys <- ["Clear","Del", "Done"]
 	cdKeys <- [gClearKeyText,gDelKeyText,gDoneKeyText]
 	cdX<-gVideoWidth/2
-	cdX<- cdX - ( cdKeyWidth + spc ) #- ( gVideoWidth/2 - # position
+	cdX<- cdX - ( cdKeyWidth + spc )
 	cdY<-selLabelY + cellHeight + padUserInput
 	cdKb <- MakeKB( gWin, cdKeys, cdX, cdY, Length(cdKeys), cdKeyWidth, keyHeight, spc )
-
 
 	allClickable<-Flatten([allClickable, GetClickable(cdKb)])
 	allVals<-Flatten([allVals, cdKeys])
 	allLabels<-Flatten([allLabels, GetLabels(cdKb)] )
 
-
-	userInput<-NewGetMouseInput( allClickable, allVals, allLabels, selLabels )
+	# get the user's input
+	userInput<-GetMouseInput( allClickable, allVals, allLabels, selLabels )
 	PrefixPrintList("UserInput:", userInput )
 
-
+	# and clean up
 	DestroyKB( gWin, cdKb )
 	Loop( l, selLabels)
 	{
@@ -160,7 +146,7 @@ define PresentRun(aNumLetters)
 	DestroyKB( gWin, padKb )
 }
 
-define NewGetMouseInput( clickable, values, keyLabels, selLabels )
+define GetMouseInput( clickable, values, keyLabels, selLabels )
 {
 	ShowCursor(1)
 	SetMouseCursorPosition(Round(gVideoWidth/2), Round(gVideoHeight/2))
