@@ -60,12 +60,12 @@ define LogSpam( str )
 define PresentRun(aNumLetters)
 {
 	ShowCursor(0)
-  gridText<-SampleN(  ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"], gGridNumCol * gGridNumRow)
-	testVals<-SampleN(gridText, aNumLetters)
+  padKeys<-SampleN(  ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"], gGridNumCol * gGridNumRow)
+	testVals<-SampleN(padKeys, aNumLetters)
 
 	winSz<-[gVideoWidth,gVideoHeight]
 
-	PrefixPrintList("Grid:",gridText)
+	PrefixPrintList("Grid:",padKeys)
 	PrefixPrintList("Test:",testVals)
 
 	Loop( testVal, testVals )
@@ -81,101 +81,89 @@ define PresentRun(aNumLetters)
 		RemoveObject(lText,gWin)
 	}
 
-	gridSpace <- 2.5 * gLgFontSz
-	gridTop <- gVideoHeight/2
-	gridLeft <- gVideoWidth/2
+	# positioning of main keypad starts from centre of screen
+	kbTop <- gVideoHeight/2	# TODO rename
+	kbLeft <- gVideoWidth/2 # TODO rename
 
-	# the main grid of letters
-	gridTop<-gridTop-gridSpace*(gGridNumRow-1)*0.5
-	gridLeft<-gridLeft-gridSpace*(gGridNumCol-1)*0.5
+	spc <- 8
+	keyHeight <- 1.9 * gLgFontSz
+	cellHeight <- keyHeight + spc
 
-	# move the grid up so we can get the blank key in there
-	blankOffset <- gridSpace #2 * gLgFontSz
-	gridTop<- gridTop-blankOffset
-
-	i <- 1
-	gridKeys<-[]
-	borders<-[]
-	gridLabels<-[]
-	gridXIdx<-0
-	gridYIdx<-0
-	while ( i <= gGridNumCol * gGridNumRow )
-	{
-		gridXIdx <- Mod( i-1, gGridNumCol)
-		gridYIdx <- Floor((i-1) / gGridNumCol)
-
-
-		# i store the borders coz i can't get the references to work with them as a local variable
-		# and can't be bothered investigating further
-		PushOnEnd( borders, Square(gridLeft + gridXIdx * gridSpace, gridTop + gridYIdx * gridSpace, gKeyHeight+4, gKeyBorder, 1 ) )
-		AddObject( Last( borders), gWin )
-
-		PushOnEnd( gridKeys, Square(gridLeft + gridXIdx * gridSpace, gridTop + gridYIdx * gridSpace, gKeyHeight, gKeyFace, 1 ) )
-		AddObject( Last( gridKeys), gWin )
-		
-		PushOnEnd(gridLabels, MakeLabel(Nth(gridText,i), gLgFont) )
-		AddObject(Last(gridLabels),gWin)
-		Move(Last(gridLabels), gridLeft + gridXIdx * gridSpace, gridTop + gridYIdx * gridSpace ) 
-
-		i<-i+1
-	}
-
-	if ( gDrawDebug )
-	{
-		gLeftLine<-ThickLine(gridLeft, 0, gridLeft, gVideoHeight, 2, gDbgColor )
-		AddObject( gLeftLine, gWin )
-	}
-
-	# let's add the blank key...
-	blankLabel<-MakeLabel("Blank", gLgFont )
-	gridYIdx <- Floor((i-1) / gGridNumCol)
-	Move( blankLabel, gVideoWidth/2, gridTop + gridYIdx * gridSpace ) 
-	AddObject( blankLabel, gWin )
-		
-
-	# remove the blankOffset
-	#gridTop<- gridTop+blankOffset
-
-
-	# the grid/row of user selections	
-	gridTop<-gridTop + gridYIdx * gridSpace + 1.5 * gridSpace
-	selLeft<-gVideoWidth/2-gridSpace*(Length(testVals)-1)*0.5
-
-	selLabels<-[]
-	i<-1
-	while ( i <= Length(testVals))
-	{
-		PushOnEnd(selLabels, MakeLabel( gNoSelectionChar, gLgFont ) )	
-		Move(Nth(selLabels,i), selLeft + ( i - 1 ) * gridSpace, gridTop )
-		AddObject(Nth(selLabels,i), gWin )
-		i<-i+1
-	}
-
-	delLabel<-MakeLabel("Del", gLgFont)
-	clearLabel<-MakeLabel("Clear", gLgFont)
-
-	# put these a little below the selection row
-	#gridTop<-Round(gridTop * 1.1 )
-	gridTop<-gridTop+1*gridSpace
-
-	okLabel<-MakeLabel("Done", gLgFont_Disabled)
-	Move( okLabel, gridLeft + gridXIdx * gridSpace + gridSpace, gridTop )
-	AddObject( okLabel , gWin )
-
+	allClickable<-[]
+	allVals<-[]
+	allLabels<-[]
 	
-	delLabel<-MakeLabel("Del", gLgFont )
-	AddObject( delLabel, gWin )
-	Move( delLabel, gridLeft - gridSpace, gridTop )
+	# the main keypad
+	kbLeft <- kbLeft - ( gGridNumCol-1)/2 * cellHeight # height==width here
+	kbTop <- kbTop - (gGridNumRow-1)/2 * cellHeight
+	padKb <- MakeSqKB( gWin, padKeys, kbLeft, kbTop, gGridNumCol, keyHeight, spc )
+	allClickable<-Flatten([allClickable, GetClickable(padKb)])
+	allVals<-Flatten( [allVals, padKeys] ) 
+	allLabels<-Flatten([allLabels, GetLabels(padKb)])
 
-	clrLabel<-MakeLabel("Clear", gLgFont )
-	AddObject( clrLabel, gWin )
-	Move( clrLabel, gridLeft - 2*gridSpace-Nth(GetSize(delLabel),1), gridTop )
+	# blank key
+	blankX<- kbLeft + (Nth(padKb, 2) - kbLeft)/2
+	blankY<-Nth(padKb, 3)+keyHeight+spc
+	blankKey <- ["Blank"]
+	blankWidth<- ( Nth(padKb, 2) - kbLeft ) + keyHeight # width==height
+	blankKb <- MakeKB( gWin, blankKey, blankX, blankY, 1, blankWidth, keyHeight, spc  )
 
+	allClickable<-Flatten([allClickable, GetClickable(blankKb)])
+	allVals<-Flatten([allVals, blankKey])
+	allLabels<-Flatten([allLabels, GetLabels(blankKb)] )
+	
+	# destination for user output
+	selLabels<-[]
+	selLabelX<-gVideoWidth/2 - ( Length( testVals ) -1 )/2* cellHeight # w==h
+	selLabelY<-blankY + keyHeight + spc
+	Loop ( val, testVals )
+	{
+		Print( "VW="+gVideoWidth )
+		Print( "Make" +val +":"+ selLabelX+":" + selLabelY )
+		#l<-MakeLabel( gNoSelectionChar, gLgFont )
+		if ( 1 ) {
+			l<-MakeLabel( val, gLgFont )
+			AddObject(l, gWin )
+			Move(l, selLabelX, selLabelY )
+			selLabels<-Append(selLabels, l )
+		}
+		selLabelX <-selLabelX + cellHeight
+	}
 	Draw()
+#
+#	delLabel<-MakeLabel("Del", gLgFont)
+#	clearLabel<-MakeLabel("Clear", gLgFont)
+#
+#	# put these a little below the selection row
+#	#gridTop<-Round(gridTop * 1.1 )
+#	gridTop<-gridTop+1*gridSpace
+#
+#	okLabel<-MakeLabel("Done", gLgFont_Disabled)
+#	Move( okLabel, gridLeft + gridXIdx * gridSpace + gridSpace, gridTop )
+#	AddObject( okLabel , gWin )
+#
+#	
+#	delLabel<-MakeLabel("Del", gLgFont )
+#	AddObject( delLabel, gWin )
+#	Move( delLabel, gridLeft - gridSpace, gridTop )
+#
+#	clrLabel<-MakeLabel("Clear", gLgFont )
+#	AddObject( clrLabel, gWin )
+#	Move( clrLabel, gridLeft - 2*gridSpace-Nth(GetSize(delLabel),1), gridTop )
+#
+#	Draw()
+#
+#	# get input
+#	#userInput<-GetMouseInput(ReverseList(gridKeys),gridText,selLabels,okLabel,delLabel,clrLabel)
+#	#PrefixPrintList("UserInput", userInput )
+	WaitForAnyKeyPress()
 
-	# get input
-	userInput<-GetMouseInput(ReverseList(gridKeys),gridText,selLabels,okLabel,delLabel,clrLabel)
-	PrefixPrintList("UserInput", userInput )
+	Loop( l, selLabels)
+	{
+		RemoveObject( l, gWin)
+	}
+	DestroyKB( blankKb )
+	Destroy( padKb )
 }
 
 define GetMouseInput(gridLabels,gridText,selLabels,okLabel,delLabel,clrLabel)
@@ -405,4 +393,67 @@ define Start(par)
 	# TODO check for existing subject output
 
 	PresentRun(5)
+}
+
+define MakeSqKB(win, keys,  kbLeft, kbTop, nCol, keySz, spc  )
+{
+	return MakeKB( win, keys,  kbLeft, kbTop, nCol, keySz, keySz, spc  )
+}
+
+define MakeKB(win, keys,  kbLeft,kbTop, nCol, keyWidth, keyHeight, spc  )
+{
+	border<-4
+
+	cellWidth<-keyWidth+spc
+	cellHeight<-keyHeight+spc
+	
+	xExtent<-kbLeft
+	yExtent<-kbTop
+	clickable <- []
+	labels<-[]
+	stuff <- []
+	i<-1
+	loop(aKey,keys)
+	{
+		colnum <- Mod( i-1, nCol )
+		rownum <- Floor( (i-1)/nCol )
+		i<-i+1
+		
+		back1 <- Rectangle(kbLeft+colnum*cellWidth,kbTop+rownum*cellHeight,keyWidth, keyHeight,gKeyBorder,1)
+		back2 <- Rectangle(kbLeft+colnum*cellWidth,kbTop+rownum*cellHeight,keyWidth-4,keyHeight-4, gKeyFace,1)
+		lab <- MakeLabel(aKey,gLgFont)
+		AddObject(back1,win)
+		AddObject(back2,win)
+		AddObject(lab,win)
+		x<-kbLeft+colnum*cellWidth
+		y<-kbTop+rownum*cellHeight
+		Move(lab,x,y)
+		if ( x > xExtent ) { xExtent <- x }
+		if ( y > yExtent ) { yExtent <- y }
+		clickable <- Append(clickable,back1)
+		stuff <- Append(stuff,[lab,back1,back2])
+		labels <- Append(labels, lab)
+	}
+	Draw()
+
+	return [clickable,xExtent,yExtent, cellWidth, Flatten(stuff), labels]
+}
+
+define GetClickable( kb )
+{
+	return Nth(kb, 1)
+}
+
+define GetLabels( kb )
+{
+	return Nth(kb, 6)
+}
+
+define DestroyKB(win,kb)
+{
+	loop( obj, Flatten( Nth(kb, 5 ) ) )
+	{
+		RemoveObject( obj, win)
+	}
+
 }

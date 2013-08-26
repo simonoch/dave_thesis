@@ -1,4 +1,5 @@
-
+# gimme some highlightin
+#
 define InitDefaults()
 {
 	gSleepEasy <- 1
@@ -90,6 +91,7 @@ define MakeKB(win, keys,  kbLeft,kbTop, nCol, keyWidth, keyHeight, spc  )
 	xExtent<-kbLeft
 	yExtent<-kbTop
 	clickable <- []
+	labels<-[]
 	stuff <- []
 	i<-1
 	loop(aKey,keys)
@@ -111,10 +113,11 @@ define MakeKB(win, keys,  kbLeft,kbTop, nCol, keyWidth, keyHeight, spc  )
 		if ( y > yExtent ) { yExtent <- y }
 		clickable <- Append(clickable,back1)
 		stuff <- Append(stuff,[lab,back1,back2])
+		labels <- Append(labels, lab)
 	}
 	Draw()
 
-	return [clickable,xExtent,yExtent, cellWidth, stuff]
+	return [clickable,xExtent,yExtent, cellWidth, Flatten(stuff)]
 }
 
 define DestroyKB(win,kb)
