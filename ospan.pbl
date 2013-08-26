@@ -1,3 +1,9 @@
+#
+# eg
+#   pebl ospan.pbl --fullscreen -V DispMS=100
+#
+#
+
 define FindFirstIndex( aList, aItem )
 {
 	rval<-0
@@ -85,8 +91,6 @@ define PresentRun(aNumLetters)
 	# move the grid up so we can get the blank key in there
 	blankOffset <- gridSpace #2 * gLgFontSz
 	gridTop<- gridTop-blankOffset
-
-	xxxdone<-0
 
 	i <- 1
 	gridKeys<-[]
@@ -298,39 +302,47 @@ define DrawDebug(val)
 
 define ParseArgs(args)
 {
-	Loop( arg, args )
+	any<-1
+	if ( Length(args) == 1 and Nth( args, 1 ) == 0 )
 	{
-		toks<-SplitString(arg,"=")
-		if ( not Length( toks ) == 2 )
+		any<-0
+	}
+	if ( any )
+	{
+		Loop( arg, args )
 		{
-			SignalFatalError( "Invalid Argument: " + arg )
-		}
-		argname<-Lowercase(Nth(toks,1))
-		argval<-Nth(toks,2)
-
-		if ( argname == "dispms" )
-		{
-			gDispMS<-ToNumber( argval )
-			if ( gDispMS < 5 or gDispMS > 5000 )
+			toks<-SplitString(arg,"=")
+			if ( not Length( toks ) == 2 )
 			{
-				SignalFatalError( "Invalid milliseconds value for DispMS")
+				SignalFatalError( "Invalid Argument: " + arg )
 			}
+			argname<-Lowercase(Nth(toks,1))
+			argval<-Nth(toks,2)
 
-
-		} elseif ( argname == "drawdebug" )
-		{
-			gDrawDebug<-ToNumber( argval )
-			if ( gDrawDebug < 1 )
+			if ( argname == "dispms" )
 			{
-				gDrawDebug <- 0
+				gDispMS<-ToNumber( argval )
+				if ( gDispMS < 5 or gDispMS > 5000 )
+				{
+					SignalFatalError( "Invalid milliseconds value for DispMS")
+				}
+
+
+			} elseif ( argname == "drawdebug" )
+			{
+				gDrawDebug<-ToNumber( argval )
+				if ( gDrawDebug < 1 )
+				{
+					gDrawDebug <- 0
+				} else
+				{
+					gDrawDebug <- 1
+				}
 			} else
 			{
-				gDrawDebug <- 1
+				Usage()
+				SignalFatalError( "Unknown Argument: " + arg )
 			}
-		} else
-		{
-			Usage()
-			SignalFatalError( "Unknown Argument: " + arg )
 		}
 	}
 }
