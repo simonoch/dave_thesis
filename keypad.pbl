@@ -38,28 +38,26 @@ define Start(p)
 	win <- MakeWindow("white")
 	nCol<-3
 
-	#kb =[clicks,xExtent,yExtent, stuff]
-
-	#kb <- MakeSqKB(win, keys, 0, 0, nCol, 1.9 * gLgFontSz )
-
 	padLeft<-100
 	padTop<-200
 
 
 	allClickable<-[]
 	allVals<-[]
+
+	spc<-8
 	
 	padKeys <- ["1","2","3","4","5","6","7","8","Z" ]
-	padKb <- MakeSqKB(win, padKeys, padLeft, padTop, nCol, 1.9 * gLgFontSz )
+	padKb <- MakeSqKB(win, padKeys, padLeft, padTop, nCol, 1.9 * gLgFontSz, spc )
 	allVals<-Flatten([allVals, padKeys])
 	allClickable<-Flatten([allClickable, Nth(padKb, 1 )])
 	
 
-	blankX<-(Nth(padKb, 2) - padLeft)/2
-	blankY<-Nth(padKb, 3)
+	blankX<- padLeft + (Nth(padKb, 2) - padLeft)/2
+	blankY<-Nth(padKb, 3)+Nth(padKb, 5 )
 	blankKey <- ["Blank"]
-	blankWidth<-Nth(padKb, 2) - padLeft
-	blankKb <- MakeKB( win, blankKey, blankX, blankY, 1, blankWidth, 1.9 * gLgFontSz    )
+	blankWidth<-Nth(padKb, 2) - padLeft+Nth(padKb, 5 ) -spc
+	blankKb <- MakeKB( win, blankKey, blankX, blankY, 1, blankWidth, 1.9 * gLgFontSz  , spc  )
 	allVals<-Flatten([allVals, blankKey])
 	allClickable<-Flatten([allClickable, Nth(blankKb, 1 )])
 
@@ -78,25 +76,21 @@ define Start(p)
 	}
 }
 
-define MakeSqKB(win, keys,  kbLeft, kbTop, nCol, keySz  )
+define MakeSqKB(win, keys,  kbLeft, kbTop, nCol, keySz, spc  )
 {
-	return MakeKB( win, keys,  kbLeft, kbTop, nCol, keySz, keySz  )
+	return MakeKB( win, keys,  kbLeft, kbTop, nCol, keySz, keySz, spc  )
 }
 
-define MakeKB(win, keys,  kbLeft,kbTop, nCol, keyWidth, keyHeight  )
+define MakeKB(win, keys,  kbLeft,kbTop, nCol, keyWidth, keyHeight, spc  )
 {
-	spc<-10
 	border<-4
 
 	cellWidth<-keyWidth+spc
 	cellHeight<-keyHeight+spc
 	
-	#keysize <- 1.9 * fontSz
-	#cellsz <-keysize+spc
-
 	xExtent<-kbLeft
 	yExtent<-kbTop
-	clicks <- []
+	clickable <- []
 	stuff <- []
 	i<-1
 	loop(aKey,keys)
@@ -116,10 +110,10 @@ define MakeKB(win, keys,  kbLeft,kbTop, nCol, keyWidth, keyHeight  )
 		Move(lab,x,y)
 		if ( x > xExtent ) { xExtent <- x }
 		if ( y > yExtent ) { yExtent <- y }
-		clicks <- Append(clicks,back1)
+		clickable <- Append(clickable,back1)
 		stuff <- Append(stuff,[lab,back1,back2])
 	}
 	Draw()
 
-	return [clicks,xExtent,yExtent, stuff]
+	return [clickable,xExtent,yExtent, cellWidth, cellHeight, stuff]
 }
