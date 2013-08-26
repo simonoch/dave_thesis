@@ -38,9 +38,11 @@ define Start(p)
 	win <- MakeWindow("white")
 	keys <- ["1","2","3","4","5","6","7","8","Z" ]
 	nCol<-3
-	kb <- MakeKB(win, keys, nCol)
 
 	#kb =[clicks,xExtent,yExtent, stuff]
+
+	kb1 <- MakeKB(win, keys, 0, 0, nCol)
+	kb <- MakeKB( win, keys, Nth(kb1, 2), Nth(kb1, 3), nCol )
 
 	labtext <- ""
 	resp <- ""
@@ -52,21 +54,17 @@ define Start(p)
 	}
 }
 
-define MakeKB(win, keys, nCol )
+define MakeKB(win, keys, kbTop, kbLeft, nCol  )
 {
-	rval<-[]
-	gridTop <- 0
-	gridLeft <- 0
-
-	gap<-10
+	spc<-10
+	border<-4
 	
 	#keysize <- 60
 	keysize <- 1.9 * gLgFontSz
-	cellsz <-keysize+gap
+	cellsz <-keysize+spc
 
-
-	xExtent<-gridLeft
-	yExtent<-gridTop
+	xExtent<-kbLeft
+	yExtent<-kbTop
 	clicks <- []
 	stuff <- []
 	i<-1
@@ -76,39 +74,21 @@ define MakeKB(win, keys, nCol )
 		rownum <- Floor( (i-1)/nCol )
 		i<-i+1
 		
-		back1 <- Square(gridLeft+colnum*cellsz,gridTop+rownum*cellsz,keysize,gKeyBorder,1)
-		back2 <- Square(gridLeft+colnum*cellsz,gridTop+rownum*cellsz,keysize-4,gKeyFace,1)
+		back1 <- Square(kbLeft+colnum*cellsz,kbTop+rownum*cellsz,keysize,gKeyBorder,1)
+		back2 <- Square(kbLeft+colnum*cellsz,kbTop+rownum*cellsz,keysize-4,gKeyFace,1)
 		lab <- MakeLabel(aKey,gLgFont)
 		AddObject(back1,win)
 		AddObject(back2,win)
 		AddObject(lab,win)
-		x<-gridLeft+colnum*cellsz
-		y<-gridTop+rownum*cellsz
+		x<-kbLeft+colnum*cellsz
+		y<-kbTop+rownum*cellsz
 		Move(lab,x,y)
-		if ( x > xExtent )
-		{
-			xExtend <- x
-		}
-		if ( y > yExtent )
-		{
-			yExtent <- y
-		}
+		if ( x > xExtent ) { xExtend <- x }
+		if ( y > yExtent ) { yExtent <- y }
 		clicks <- Append(clicks,back1)
 		stuff <- Append(stuff,[lab,back1,back2])
 	}
 	Draw()
 
-	rval<-[clicks,xExtent,yExtent, stuff]
-
-	return rval
-
-#	labtext <- ""
-#	resp <- ""
-#	while(not resp == "Z")
-#	{
-#		resp <- WaitForClickOnTarget(clicks,keys)
-#		labtext <- labtext + resp
-#		Print( "Pressed: " + resp )
-#	}
-#	return labtext
+	return [clicks,xExtent,yExtent, stuff]
 }
