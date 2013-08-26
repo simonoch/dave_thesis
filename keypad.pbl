@@ -70,6 +70,9 @@ define Start(p)
 		labtext <- labtext + resp
 		Print( "Pressed: " + resp )
 	}
+
+	DestroyKB( win, padKb)
+	DestroyKB( win, blankKb )
 }
 
 define MakeSqKB(win, keys,  kbLeft, kbTop, nCol, keySz, spc  )
@@ -112,4 +115,13 @@ define MakeKB(win, keys,  kbLeft,kbTop, nCol, keyWidth, keyHeight, spc  )
 	Draw()
 
 	return [clickable,xExtent,yExtent, cellWidth, stuff]
+}
+
+define DestroyKB(win,kb)
+{
+	loop( obj, Flatten( Nth(kb, 5 ) ) )
+	{
+		RemoveObject( obj, win)
+	}
+
 }
