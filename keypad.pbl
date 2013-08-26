@@ -36,31 +36,54 @@ define Start(p)
 {
 	InitDefaults()
 	win <- MakeWindow("white")
-	keys <- ["1","2","3","4","5","6","7","8","Z" ]
 	nCol<-3
 
 	#kb =[clicks,xExtent,yExtent, stuff]
 
 	#kb <- MakeSqKB(win, keys, 0, 0, nCol, 1.9 * gLgFontSz )
-	kb1 <- MakeSqKB(win, keys, 0, 0, nCol, 1.9 * gLgFontSz )
-	kb <- MakeSqKB( win, keys, Nth(kb1, 2), Nth(kb1, 3), nCol, 1.9 * gLgFontSz  )
+
+	padLeft<-100
+	padTop<-200
+
+
+	allClickable<-[]
+	allVals<-[]
+	
+	padKeys <- ["1","2","3","4","5","6","7","8","Z" ]
+	padKb <- MakeSqKB(win, padKeys, padLeft, padTop, nCol, 1.9 * gLgFontSz )
+	allVals<-Flatten([allVals, padKeys])
+	allClickable<-Flatten([allClickable, Nth(padKb, 1 )])
+	
+
+	blankX<-(Nth(padKb, 2) - padLeft)/2
+	blankY<-Nth(padKb, 3)
+	blankKey <- ["Blank"]
+	blankWidth<-Nth(padKb, 2) - padLeft
+	blankKb <- MakeKB( win, blankKey, blankX, blankY, 1, blankWidth, 1.9 * gLgFontSz    )
+	allVals<-Flatten([allVals, blankKey])
+	allClickable<-Flatten([allClickable, Nth(blankKb, 1 )])
+
+
+
+	#allKeys <-Flatten( [Nth(padKb, 1), Nth(blankKb, 1)] )
+	#allVals <-Flatten( [padKeys, blankKey] )
 
 	labtext <- ""
 	resp <- ""
 	while(not resp == "Z")
 	{
-		resp <- WaitForClickOnTarget(Nth(kb,1), keys)
+		resp <- WaitForClickOnTarget(allClickable, allVals)
 		labtext <- labtext + resp
 		Print( "Pressed: " + resp )
 	}
 }
 
-define MakeSqKB(win, keys, kbTop, kbLeft, nCol, keySz  )
+define MakeSqKB(win, keys,  kbLeft, kbTop, nCol, keySz  )
 {
-	return MakeKB( win, keys, kbTop, kbLeft, nCol, keySz, keySz  )
+	return MakeKB( win, keys,  kbLeft, kbTop, nCol, keySz, keySz  )
 }
 
-define MakeKB(win, keys, kbTop, kbLeft, nCol, keyWidth, keyHeight  )
+define MakeKB(win, keys,  kbLeft,kbTop, nCol, keyWidth, keyHeight  )
 {
 	spc<-10
 	border<-4
