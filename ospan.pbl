@@ -20,6 +20,10 @@ define FindFirstIndex( aList, aItem )
 			}
 		}
 	}
+	if ( found == 0 )
+	{
+		rval <- 0
+	}
 	return rval
 }
 
@@ -232,24 +236,33 @@ define NewGetMouseInput( clickable, values, keyLabels, selLabels )
 
 				#Draw()
 			#}
-		} elseif ( Length( rval ) <= Length( selLabels ) )
+		} elseif ( Length( rval ) < Length( selLabels ) )
 		{
 			if ( resp == gBlankKeyText )
 			{
+				# is blank key
 				rval<-Append(rval, gUnknownValue )
 				SetText( Nth(selLabels, Length(rval)), gUnknownValue )
-				if ( Length( rval ) == Length( selLabels ) )
-				{
-					SetFont( Nth( keyLabels, idxDone ), gLgFont )
-				}
-				Draw()
 			} elseif ( FindFirstIndex( rval, resp ) == 0 )
 			{
 				# Not already selected
-
-				Draw()
+				rval<-Append(rval, resp )
+				SetText( Nth(selLabels, Length(rval)), resp )
+				if ( gDisableGridSelections <> 0 )
+				{
+					idx <- FindFirstIndex( values, resp )
+					SetFont( Nth( keyLabels, idx), gLgFont_Disabled )
+				}
 			}
-
+			# enable done if appropriate
+			if ( Length( rval ) == Length( selLabels ) )
+			{
+				SetFont( Nth( keyLabels, idxDone ), gLgFont )
+			}
+			# always try to enable these even though it may be a no-op
+			SetFont( Nth( keyLabels, idxClear ), gLgFont )
+			SetFont( Nth( keyLabels, idxDel ), gLgFont )
+			Draw()
 		}
 	} 
 
