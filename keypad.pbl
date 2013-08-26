@@ -47,24 +47,20 @@ define Start(p)
 
 	spc<-8
 	
+	keyHeight <- 1.9 * gLgFontSz
 	padKeys <- ["1","2","3","4","5","6","7","8","Z" ]
-	padKb <- MakeSqKB(win, padKeys, padLeft, padTop, nCol, 1.9 * gLgFontSz, spc )
+	padKb <- MakeSqKB(win, padKeys, padLeft, padTop, nCol, keyHeight, spc )
 	allVals<-Flatten([allVals, padKeys])
 	allClickable<-Flatten([allClickable, Nth(padKb, 1 )])
 	
 
 	blankX<- padLeft + (Nth(padKb, 2) - padLeft)/2
-	blankY<-Nth(padKb, 3)+Nth(padKb, 5 )
+	blankY<-Nth(padKb, 3)+keyHeight+spc
 	blankKey <- ["Blank"]
-	blankWidth<-Nth(padKb, 2) - padLeft+Nth(padKb, 5 ) -spc
-	blankKb <- MakeKB( win, blankKey, blankX, blankY, 1, blankWidth, 1.9 * gLgFontSz  , spc  )
+	blankWidth<- ( Nth(padKb, 2) - padLeft ) + keyHeight # width==height
+	blankKb <- MakeKB( win, blankKey, blankX, blankY, 1, blankWidth, keyHeight, spc  )
 	allVals<-Flatten([allVals, blankKey])
 	allClickable<-Flatten([allClickable, Nth(blankKb, 1 )])
-
-
-
-	#allKeys <-Flatten( [Nth(padKb, 1), Nth(blankKb, 1)] )
-	#allVals <-Flatten( [padKeys, blankKey] )
 
 	labtext <- ""
 	resp <- ""
@@ -115,5 +111,5 @@ define MakeKB(win, keys,  kbLeft,kbTop, nCol, keyWidth, keyHeight, spc  )
 	}
 	Draw()
 
-	return [clickable,xExtent,yExtent, cellWidth, cellHeight, stuff]
+	return [clickable,xExtent,yExtent, cellWidth, stuff]
 }

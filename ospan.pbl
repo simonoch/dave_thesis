@@ -1,6 +1,6 @@
 #
 # eg
-#   pebl ospan.pbl --fullscreen -V DispMS=100
+#   pebl ospan.pbl --fullscreen -V DispMS=100 -s subject_id
 #
 #
 
@@ -59,6 +59,7 @@ define LogSpam( str )
 
 define PresentRun(aNumLetters)
 {
+	ShowCursor(0)
   gridText<-SampleN(  ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"], gGridNumCol * gGridNumRow)
 	testVals<-SampleN(gridText, aNumLetters)
 
@@ -326,8 +327,6 @@ define ParseArgs(args)
 				{
 					SignalFatalError( "Invalid milliseconds value for DispMS")
 				}
-
-
 			} elseif ( argname == "drawdebug" )
 			{
 				gDrawDebug<-ToNumber( argval )
@@ -351,11 +350,13 @@ define Usage()
 {
 	Print( "Arguments" )
 	Print( " -V DispMS=<milliseconds> # Time each stimulus letter shown. Default 1000" )
-
+	Print( "" )
+	Print( "**Be careful/don't use spaces in these arguments" )
 }
 
 define InitDefaults()
 {
+	Print( "InitDefaults" )
 	gSleepEasy <- 1
 	# how long Target Letters are shown for
 	gDispMS <- 1000
@@ -391,11 +392,17 @@ define InitDefaults()
 
 define Start(par)
 {
-	ShowCursor(0)
 	InitDefaults()
 	ParseArgs(par)
 
 	gDrawDebug<-DrawDebug(gDrawDebug)
+
+	if ( gSubNum == 0 )
+	{
+		gSubNum<-GetSubNum( gWin )	
+	}
+	# TODO replace spaces in subject with underscore
+	# TODO check for existing subject output
 
 	PresentRun(5)
 }
