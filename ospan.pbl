@@ -34,6 +34,18 @@ define PrintList(aList)
 	PrefixPrintList("",aList)
 }
 
+define ReverseList(aList)
+{
+	rval<-[]
+	i<-Length(aList)
+	while ( i > 0 )
+	{
+		rval<-Append(rval, Nth( aList, i ) )
+		i <- i-1
+	}
+	return rval
+}
+
 define LogSpam( str )
 {
 	Print( str )
@@ -77,7 +89,8 @@ define PresentRun(aNumLetters)
 	xxxdone<-0
 
 	i <- 1
-	keys<-[]
+	gridKeys<-[]
+	borders<-[]
 	gridLabels<-[]
 	gridXIdx<-0
 	gridYIdx<-0
@@ -86,18 +99,18 @@ define PresentRun(aNumLetters)
 		gridXIdx <- Mod( i-1, gGridNumCol)
 		gridYIdx <- Floor((i-1) / gGridNumCol)
 
-		PushOnEnd(gridLabels, MakeLabel(Nth(gridText,i), gLgFont) )
 
-		xxxdone <- xxxdone + 1
-		if ( xxxdone > 0 )
-		{
-			PushOnEnd( keys, Square(gridLeft + gridXIdx * gridSpace, gridTop + gridYIdx * gridSpace, gKeyHeight+4, gKeyBorder, 1 ) )
-			AddObject( Last( keys), gWin )
-			PushOnEnd( keys, Square(gridLeft + gridXIdx * gridSpace, gridTop + gridYIdx * gridSpace, gKeyHeight, gKeyFace, 1 ) )
-			AddObject( Last( keys), gWin )
-		}
-		Move(Nth(gridLabels,i), gridLeft + gridXIdx * gridSpace, gridTop + gridYIdx * gridSpace ) 
-		AddObject(Nth(gridLabels,i),gWin)
+		# i store the borders coz i can't get the references to work with them as a local variable
+		# and can't be bothered investigating further
+		PushOnEnd( borders, Square(gridLeft + gridXIdx * gridSpace, gridTop + gridYIdx * gridSpace, gKeyHeight+4, gKeyBorder, 1 ) )
+		AddObject( Last( borders), gWin )
+
+		PushOnEnd( gridKeys, Square(gridLeft + gridXIdx * gridSpace, gridTop + gridYIdx * gridSpace, gKeyHeight, gKeyFace, 1 ) )
+		AddObject( Last( gridKeys), gWin )
+		
+		PushOnEnd(gridLabels, MakeLabel(Nth(gridText,i), gLgFont) )
+		AddObject(Last(gridLabels),gWin)
+		Move(Last(gridLabels), gridLeft + gridXIdx * gridSpace, gridTop + gridYIdx * gridSpace ) 
 
 		i<-i+1
 	}
@@ -156,7 +169,7 @@ define PresentRun(aNumLetters)
 	Draw()
 
 	# get input
-	userInput<-GetMouseInput(gridLabels,gridText,selLabels,okLabel,delLabel,clrLabel)
+	userInput<-GetMouseInput(ReverseList(gridKeys),gridText,selLabels,okLabel,delLabel,clrLabel)
 	PrefixPrintList("UserInput", userInput )
 }
 
@@ -331,6 +344,7 @@ define Usage()
 
 define InitDefaults()
 {
+	gSleepEasy <- 1
 	# how long Target Letters are shown for
 	gDispMS <- 1000
 
