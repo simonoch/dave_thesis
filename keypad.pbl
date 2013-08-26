@@ -1,33 +1,58 @@
-define Start(p)
+
+define InitDefaults()
 {
 	gSleepEasy <- 1
-	win <- MakeWindow()
-#keys = [ "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11" ]
+	# how long Target Letters are shown for
+	gDispMS <- 1000
+
+	gGridNumCol<-3
+	gGridNumRow<-4
+
+	gFGColor <- MakeColor("black")
+	gFGDisabledColor <- MakeColor("grey55")
+	gBGColor <- MakeColor("white")
+	gKeyBorder<-MakeColor( "grey20" )
+	gKeyFace<-MakeColor( "grey90" )
+
+	gDbgColor <-MakeColor("grey90")
+
+	# when a user selects a grid item, draw it as disabled to 
+	# suggest they can't select again
+	gDisableGridSelections<-1
+	gNoSelectionChar<-"*"
+
+	gLgFontSz<-40
+	gKeyHeight<-2.1*gLgFontSz
+
+  gLgFont <- MakeFont("Vera.ttf",0,gLgFontSz,gFGColor,gBGColor,0)
+  gLgFont_Disabled <- MakeFont("Vera.ttf",0,gLgFontSz,gFGDisabledColor,gBGColor,0)
+	gSmlFont<- MakeFont( "Vera.ttf",0,20,gFGColor,gBGColor,0)
+	gDbgFont<-MakeFont(  "Vera.ttf",0,20,gDbgColor,gBGColor,0)
+
+	gDrawDebug<-0
+}
+
+define Start(p)
+{
+	InitDefaults()
+	win <- MakeWindow("white")
 	keys <- [["1","2","3","4","5","6","7","8","9","0"],
 		["A","B","C","D","E","F","G","H","I","J"],
 		["K","L","M","N","O","P","Q","R","S","T"],
-		["U","V","W","X","Y","Z","CLEAR","BACK","SPACE","DONE"]]
+		["U","V","W","X","Y","Z"]]
 	nCol<-10
 	resp <- VKeyboardInput(win,"keyboard", keys, nCol)
 }
 
 define VKeyboardInput(win,type, keys, nCol)
 {
-	backing <- Rectangle(gVideoWidth/2,gVideoHeight/2,gVideoWidth,gVideoheight,MakeColor("black"),1)
-	AddObject(backing,win)
-
-##basic display parameters
-	 ybase <- 50
-	 xbase <- 50
-	 gap <- 70
-	 keysize <- 60
-
-
-	font <- MakeFont(gPEBLBaseFont,2,25,MakeColor("white"),MakeColor("white"),0)
-	wordfont<-MakeFont(gPEBLBaseFont,2,15,MakeColor("lightgrey"),MakeColor("white"),0)
+	ybase <- 50
+	xbase <- 50
+	gap <- 70
+	keysize <- 60
 
 ##make an entry field label
-	label <- MakeLabel("[]",font)
+	label <- MakeLabel("[]",gLgFont)
 	AddObject(label,win)
 	Move(label,xbase + gap*(nCol+1)/2,ybase)
 	Draw(label)
@@ -37,67 +62,33 @@ define VKeyboardInput(win,type, keys, nCol)
 	stuff <- []
 	loop(row,keys)
 	{
-	colnum <- 1
-	loop(col,row)
+		colnum <- 1
+		loop(col,row)
 		{
-			
 			back1 <- Square(xbase+colnum*gap,ybase+rownum*gap,keysize,MakeColor("grey"),1)
 			back2 <- Square(xbase+colnum*gap,ybase+rownum*gap,keysize-4,MakeColor("grey20"),1)
-	if(StringLength(col)>1) 
-			 {
-		 lab <- MakeLabel(col,wordfont)
-			 } else {
+			lab <- MakeLabel(col,gLgFont)
+			AddObject(back1,win)
+			AddObject(back2,win)
+			AddObject(lab,win)
+			Move(lab,xbase+colnum*gap,ybase+rownum*gap)
 
-			lab <- MakeLabel(col,font)
-			 }
-	AddObject(back1,win)
-	AddObject(back2,win)
-	AddObject(lab,win)
-	Move(lab,xbase+colnum*gap,ybase+rownum*gap)
-
-
-		colnum <- colnum + 1
-	clicks <- Append(clicks,back1)
+			colnum <- colnum + 1
+			clicks <- Append(clicks,back1)
 			stuff <- Append(stuff,[lab,back1,back2])
 		}
-	 rownum <- rownum + 1
-
+		rownum <- rownum + 1
 	}
-
 	Draw()
 
 	labtext <- ""
 	resp <- ""
-	while(not resp == "DONE")
+	while(not resp == "Z")
 	{
-	label.text <- labtext
-	Draw()
-	resp <- WaitForClickOnTarget(clicks,Flatten(keys))
-	if(resp == "BACK")
-		{
-			end <- Max([StringLength(labtext)-1,0])
-		if(end>0)
-				 {
-				labtext <- SubString(labtext,1,end)
-		 }else{
-				labtext <- ""
-				 }
-		}elseif(resp=="CLEAR")
-		{
-			labtext <- ""
-	} elseif(resp == "DONE")
-		{
-		Print(labtext)
-		}  elseif(resp == "SPACE")
-		{
-			labtext <- labtext + " "
-		}else {
-			labtext <- labtext + resp
-		}
-
+		label.text <- labtext
+		Draw()
+		resp <- WaitForClickOnTarget(clicks,Flatten(keys))
+		labtext <- labtext + resp
 	}
-
-	label.text <- labtext
-	Draw()
 	return labtext
 }
