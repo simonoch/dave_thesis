@@ -81,9 +81,6 @@ define PresentRun(aNumLetters)
 		RemoveObject(lText,gWin)
 	}
 
-	# positioning of main keypad starts from centre of screen
-	kbTop <- gVideoHeight/2	# TODO rename
-	kbLeft <- gVideoWidth/2 # TODO rename
 
 	spc <- 8
 	keyHeight <- 1.9 * gLgFontSz
@@ -94,18 +91,21 @@ define PresentRun(aNumLetters)
 	allLabels<-[]
 	
 	# the main keypad
-	kbLeft <- kbLeft - ( gGridNumCol-1)/2 * cellHeight # height==width here
-	kbTop <- kbTop - (gGridNumRow-1)/2 * cellHeight
-	padKb <- MakeSqKB( gWin, padKeys, kbLeft, kbTop, gGridNumCol, keyHeight, spc )
+	# positioning of main keypad starts from centre of screen
+	currY <- gVideoHeight/2	# TODO rename
+	currX <- gVideoWidth/2 # TODO rename
+	currX <- currX - ( gGridNumCol-1)/2 * cellHeight # height==width here
+	currY <- currY - (gGridNumRow-1)/2 * cellHeight
+	padKb <- MakeSqKB( gWin, padKeys, currX, currY, gGridNumCol, keyHeight, spc )
 	allClickable<-Flatten([allClickable, GetClickable(padKb)])
 	allVals<-Flatten( [allVals, padKeys] ) 
 	allLabels<-Flatten([allLabels, GetLabels(padKb)])
 
 	# blank key
-	blankX<- kbLeft + (Nth(padKb, 2) - kbLeft)/2
+	blankX<- currX + (Nth(padKb, 2) - currX)/2
 	blankY<-Nth(padKb, 3)+keyHeight+spc
 	blankKey <- ["Blank"]
-	blankWidth<- ( Nth(padKb, 2) - kbLeft ) + keyHeight # width==height
+	blankWidth<- ( Nth(padKb, 2) - currX ) + keyHeight # width==height
 	blankKb <- MakeKB( gWin, blankKey, blankX, blankY, 1, blankWidth, keyHeight, spc  )
 
 	allClickable<-Flatten([allClickable, GetClickable(blankKb)])
@@ -113,23 +113,36 @@ define PresentRun(aNumLetters)
 	allLabels<-Flatten([allLabels, GetLabels(blankKb)] )
 	
 	# destination for user output
+	padUserInput<-20
 	selLabels<-[]
 	selLabelX<-gVideoWidth/2 - ( Length( testVals ) -1 )/2* cellHeight # w==h
-	selLabelY<-blankY + keyHeight + spc
+	selLabelY<-blankY + cellHeight + padUserInput
 	Loop ( val, testVals )
 	{
-		Print( "VW="+gVideoWidth )
-		Print( "Make" +val +":"+ selLabelX+":" + selLabelY )
-		#l<-MakeLabel( gNoSelectionChar, gLgFont )
-		if ( 1 ) {
-			l<-MakeLabel( val, gLgFont )
-			AddObject(l, gWin )
-			Move(l, selLabelX, selLabelY )
-			selLabels<-Append(selLabels, l )
-		}
+		l<-MakeLabel( gNoSelectionChar, gLgFont )
+		#l<-MakeLabel( val, gLgFont )
+		AddObject(l, gWin )
+		Move(l, selLabelX, selLabelY )
+		selLabels<-Append(selLabels, l )
 		selLabelX <-selLabelX + cellHeight
 	}
 	Draw()
+
+	# the clear/del kb
+	cdKeyWidth<-2 * keyHeight
+	cdKeys <- ["Clear","Del", "Done"]
+	cdX<-gVideoWidth/2
+	cdX<- cdX - ( cdKeyWidth + spc ) #- ( gVideoWidth/2 - # position
+	cdY<-selLabelY + cellHeight + padUserInput
+	cdKb <- MakeKB( gWin, cdKeys, cdX, cdY, Length(cdKeys), cdKeyWidth, keyHeight, spc )
+
+
+	allClickable<-Flatten([allClickable, GetClickable(cdKb)])
+	allVals<-Flatten([allVals, cdKeys])
+	allLabels<-Flatten([allLabels, GetLabels(cdKb)] )
+
+
+
 #
 #	delLabel<-MakeLabel("Del", gLgFont)
 #	clearLabel<-MakeLabel("Clear", gLgFont)
@@ -158,12 +171,13 @@ define PresentRun(aNumLetters)
 #	#PrefixPrintList("UserInput", userInput )
 	WaitForAnyKeyPress()
 
+	DestroyKB( cdKb )
 	Loop( l, selLabels)
 	{
 		RemoveObject( l, gWin)
 	}
 	DestroyKB( blankKb )
-	Destroy( padKb )
+	DestroyKB( padKb )
 }
 
 define GetMouseInput(gridLabels,gridText,selLabels,okLabel,delLabel,clrLabel)
