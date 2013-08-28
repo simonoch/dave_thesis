@@ -1,6 +1,6 @@
 #
 # eg
-#   pebl ospan.pbl --fullscreen -V DispMS=100 -s subject_id
+#   pebl ospan.pbl --fullscreen -V DispMS=100 -s subject_id -v distract=distraction.txt
 #
 #
 
@@ -318,6 +318,9 @@ define ParseArgs(args)
 				{
 					SignalFatalError( "Invalid milliseconds value for DispMS")
 				}
+			} elseif ( argname == "distract" )
+			{
+				gDistractionFile<-argval
 			} elseif ( argname == "drawdebug" )
 			{
 				gDrawDebug<-ToNumber( argval )
@@ -341,6 +344,7 @@ define Usage()
 {
 	Print( "Arguments" )
 	Print( " -V DispMS=<milliseconds> # Time each stimulus letter shown. Default 1000" )
+	Print( " -V Distract=<path/to/a/file.txt> # File containing distraction tasks" )
 	Print( "" )
 	Print( "**Be careful/don't use spaces in these arguments" )
 }
@@ -359,6 +363,7 @@ define InitDefaults()
 	gClearKeyText <- "Clear"
 	gDelKeyText <- "Del"
 	gBlankKeyText <- "Blank"
+	gDistractionFile <- ""
 
 	gFGColor <- MakeColor("black")
 	gFGDisabledColor <- MakeColor("grey55")
@@ -392,6 +397,13 @@ define Start(par)
 	InitDefaults()
 	ParseArgs(par)
 
+	if ( gDistractionFile == "" )
+	{
+		Usage()
+		SignalFatalError( "You need to specify a file containing distraction tasks" )
+	}
+	gDistractionTasks<-LoadDistractionTasks( gDistractionFile )
+
 	gDrawDebug<-DrawDebug(gDrawDebug)
 
 	if ( gSubNum == 0 )
@@ -402,6 +414,53 @@ define Start(par)
 	# TODO check for existing subject output
 
 	PresentRun(5)
+}
+
+define LoadDistractionTasks( a_File )
+{
+	Print( "Loading distraction tasks from " + a_File +"...")
+	rval <- []
+	Loop( line, FileReadList( a_File ) )
+	{
+		idx<-FindInString( line, ",", 1 )
+		if ( idx < 1 )
+		{
+			SignalFatalError( "Invalid Distraction Spec: "+line )
+		}
+
+		tf<-Lowercase( StripSpace( SubString( line, 1, idx-1 ) ) )
+		if ( Length( SplitString( tf, "" ) ) < 1 )
+		{
+			SignalFatalError( "Invalid Distraction Spec: "+line )
+		}
+		tfValue<-Nth( SplitString( tf, "" ), 1 )
+		if ( tfValue == "t" )
+		{
+			tfValue<-1
+		} elseif ( tfValue == "f" )
+		{
+			tfValue<-0
+		} else
+		{
+			SignalFatalError( "Invalid Distraction Spec: "+line )
+		}
+
+		lineLen <- Length( SplitString( line, "" ) )
+		assertion<-StripSpace( SubString( line, idx+1, lineLen - idx ) )
+		if ( Length( SplitString( assertion, "" ) ) < 1 )
+		{
+			SignalFatalError( "Invalid Distraction Spec: "+line )
+		}
+		#Print( line )
+		#Print( tfValue +":" + assertion )
+		rval<-Append( rval, [tfValue, assertion] )
+	}
+
+	if ( Length( rval ) == 0 )
+	{
+		SignalFatalError( "No distraction tasks loaded" )
+	}
+	Print( "Loaded " + Length(rval)+" distraction tasks" )
 }
 
 define MakeSqKB(win, keys,  kbLeft, kbTop, nCol, keySz, spc  )

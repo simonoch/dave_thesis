@@ -1,0 +1,4 @@
+true,Oranges are orange
+false,You should eat pineapple
+true,Mushrooms are good
+true,An apple a day keeps the doctor away
