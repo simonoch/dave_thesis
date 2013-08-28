@@ -49,6 +49,35 @@ define LogSpam( str )
 	Print( str )
 }
 
+# return list containing 
+define ShowDistract(aNum)
+{
+	rval<-[]
+	while ( aNum > 0 )
+	{
+		# fill up our list of tasks again
+		if( Length( gDistractWorkingSet ) == 0 )
+		{
+			gDistractWorkingSet<-SampleN( gDistractionTasks, Length( gDistractionTasks ) )
+		}
+		
+		currDistract<-Nth(gDistractWorkingSet, 1 )
+		gDistractWorkingSet<-RemoveSubset( gDistractWorkingSet, [1])
+
+		truthVal<-Nth( currDistract, 1 )
+		assertion<-Nth( currDistract, 2 )
+
+		#Print( truthVal +":"+assertion )
+
+		assertLabel<-MakeLabel( assertion, gLgFont )
+
+XXX
+
+
+		aNum <- aNum - 1
+	}
+}
+
 define PresentRun(aNumLetters)
 {
 	ShowCursor(0)
@@ -403,6 +432,8 @@ define Start(par)
 		SignalFatalError( "You need to specify a file containing distraction tasks" )
 	}
 	gDistractionTasks<-LoadDistractionTasks( gDistractionFile )
+	# this is essentially a clone
+	gDistractWorkingSet<-SampleN( gDistractionTasks, Length( gDistractionTasks ) )
 
 	gDrawDebug<-DrawDebug(gDrawDebug)
 
@@ -413,7 +444,8 @@ define Start(par)
 	# TODO replace spaces in subject with underscore
 	# TODO check for existing subject output
 
-	PresentRun(5)
+	#PresentRun(5)
+	ShowDistract( 2 )
 }
 
 define LoadDistractionTasks( a_File )
@@ -461,6 +493,7 @@ define LoadDistractionTasks( a_File )
 		SignalFatalError( "No distraction tasks loaded" )
 	}
 	Print( "Loaded " + Length(rval)+" distraction tasks" )
+	return rval
 }
 
 define MakeSqKB(win, keys,  kbLeft, kbTop, nCol, keySz, spc  )
