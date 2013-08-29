@@ -49,33 +49,28 @@ define LogSpam( str )
 	Print( str )
 }
 
-# return list containing 
-define ShowDistract(aNum)
+# show a single distract task, return 0/1 for success failure
+define ShowDistract()
 {
-	rval<-[]
-	while ( aNum > 0 )
+	# fill up our list of tasks again
+	if( Length( gDistractWorkingSet ) == 0 )
 	{
-		# fill up our list of tasks again
-		if( Length( gDistractWorkingSet ) == 0 )
-		{
-			gDistractWorkingSet<-SampleN( gDistractionTasks, Length( gDistractionTasks ) )
-		}
-		
-		currDistract<-Nth(gDistractWorkingSet, 1 )
-		gDistractWorkingSet<-RemoveSubset( gDistractWorkingSet, [1])
-
-		truthVal<-Nth( currDistract, 1 )
-		assertion<-Nth( currDistract, 2 )
-
-		#Print( truthVal +":"+assertion )
-
-		assertLabel<-MakeLabel( assertion, gLgFont )
-
-XXX
-
-
-		aNum <- aNum - 1
+		gDistractWorkingSet<-SampleN( gDistractionTasks, Length( gDistractionTasks ) )
 	}
+	
+	currDistract<-Nth(gDistractWorkingSet, 1 )
+	gDistractWorkingSet<-RemoveSubset( gDistractWorkingSet, [1])
+
+	truthVal<-Nth( currDistract, 1 )
+	assertion<-Nth( currDistract, 2 )
+
+	#Print( truthVal +":"+assertion )
+
+	assertLabel<-MakeLabel( assertion, gLgFont )
+
+
+
+	aNum <- aNum - 1
 }
 
 define PresentRun(aNumLetters)
@@ -445,7 +440,29 @@ define Start(par)
 	# TODO check for existing subject output
 
 	#PresentRun(5)
-	ShowDistract( 2 )
+	ShowDistract()
+}
+
+# return [Trim(token),Trim(lineleft)]
+define ParseFirstToken(sep, line )
+{
+	idx<-FindInString( line, sep, 1 )
+	if ( idx < 1 )
+	{
+		SignalFatalError( "Invalid Distraction Spec: "+line )
+	}
+	
+	tok<-StripSpace( SubString( line, 1, idx-1 ) )
+
+	lineLen <- Length( SplitString( line, "" ) )
+	remainder<-StripSpace( SubString( line, idx+1, lineLen - idx ) )
+
+	return [tok,remainder]
+}
+
+define LineLength( line )
+{
+	return Length( SplitString( line, "" ) )
 }
 
 define LoadDistractionTasks( a_File )
@@ -454,18 +471,25 @@ define LoadDistractionTasks( a_File )
 	rval <- []
 	Loop( line, FileReadList( a_File ) )
 	{
-		idx<-FindInString( line, ",", 1 )
-		if ( idx < 1 )
-		{
-			SignalFatalError( "Invalid Distraction Spec: "+line )
-		}
+		p1<-ParseFirstToken( ",", line )
+		p2<-ParseFirstToken( ",", Nth(p1, 2 ) )
 
-		tf<-Lowercase( StripSpace( SubString( line, 1, idx-1 ) ) )
-		if ( Length( SplitString( tf, "" ) ) < 1 )
+		question<-Nth(p1,1)
+		if ( LineLength( question ) < 1 )
 		{
 			SignalFatalError( "Invalid Distraction Spec: "+line )
 		}
-		tfValue<-Nth( SplitString( tf, "" ), 1 )
+		answer<-Nth(p2,1)
+		if ( LineLength( answer ) < 1 )
+		{
+			SignalFatalError( "Invalid Distraction Spec: "+line )
+		}
+		isTF<-Lowercase(Nth(p2,2))
+		if ( LineLength( isTF ) < 1 )
+		{
+			SignalFatalError( "Invalid Distraction Spec: "+line )
+		}
+		tfValue<-Nth( SplitString( isTF, "" ), 1 )
 		if ( tfValue == "t" )
 		{
 			tfValue<-1
@@ -476,16 +500,8 @@ define LoadDistractionTasks( a_File )
 		{
 			SignalFatalError( "Invalid Distraction Spec: "+line )
 		}
-
-		lineLen <- Length( SplitString( line, "" ) )
-		assertion<-StripSpace( SubString( line, idx+1, lineLen - idx ) )
-		if ( Length( SplitString( assertion, "" ) ) < 1 )
-		{
-			SignalFatalError( "Invalid Distraction Spec: "+line )
-		}
-		#Print( line )
-		#Print( tfValue +":" + assertion )
-		rval<-Append( rval, [tfValue, assertion] )
+		#Print( question +":"+ answer +":"+ tfValue )
+		rval<-Append( rval, [question, answer, tfValue] )
 	}
 
 	if ( Length( rval ) == 0 )
