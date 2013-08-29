@@ -50,7 +50,7 @@ define LogSpam( str )
 }
 
 # show a single distract task, return 0/1 for success failure
-define ShowDistract()
+define ShowDistract(a_WaitTO)
 {
 	# fill up our list of tasks again
 	if( Length( gDistractWorkingSet ) == 0 )
@@ -61,25 +61,72 @@ define ShowDistract()
 	currDistract<-Nth(gDistractWorkingSet, 1 )
 	gDistractWorkingSet<-RemoveSubset( gDistractWorkingSet, [1])
 
-	truthVal<-Nth( currDistract, 1 )
-	assertion<-Nth( currDistract, 2 )
+	question<-Nth( currDistract, 1 )
+	answer<-Nth( currDistract, 2 )
+	truthVal<-Nth( currDistract, 3 )
 
-	#Print( truthVal +":"+assertion )
+	questionLabel<-MakeLabel( question, gLgFont )
+	xPos<- gVideoWidth/2
+	yPos<- gVideoHeight/2
+	Move(questionLabel, xPos,yPos)
+	AddObject(questionLabel,gWin)
+	Draw()
 
-	assertLabel<-MakeLabel( assertion, gLgFont )
+	rval<-0
+	if ( a_WaitTO > 0 )
+	{
+		v<-WaitForMouseButtonWithTimeout(a_WaitTO)
+		# click returns a vector with coords
+		if ( Length( v ) == 1 )
+		{
+			# timeout appears to return text <timeout>
+			rval<- -1
+		}
+	} else
+	{
+		WaitForMouseButton()
+	}
+	RemoveObject(questionLabel, gWin)
 
+	if ( rval == -1 )
+	{
+		# timed out => failed
+		rval <- 0
+	} else
+	{
+		spc <- 8
+		keyHeight <- 1.9 * gLgFontSz
+		cellHeight <- keyHeight + spc
 
+		answerLabel<-MakeLabel( answer, gLgFont )
+		xPos<- gVideoWidth/2
+		yPos<- gVideoHeight/2 - cellHeight
+		Move(answerLabel, xPos,yPos)
+		AddObject(answerLabel,gWin)
+		Draw()
 
-	aNum <- aNum - 1
+		yPos <- yPos + 2 * cellHeight
+
+		keyWidth<-3*keyHeight
+		kb <- MakeKB( gWin, ["True","False"], xPos-keyWidth/2, yPos, 2, keyWidth, keyHeight, spc)
+
+		resp<-WaitForClickOnTarget( GetClickable(kb), ["1", "0"]  )
+
+		if ( ToNumber( resp ) == truthVal )
+		{
+			rval <- 1
+		}
+
+		DestroyKB( gWin, kb )
+	}
+	return rval
 }
 
 define PresentRun(aNumLetters)
 {
 	ShowCursor(0)
-  padKeys<-SampleN(  ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"], gGridNumCol * gGridNumRow)
+  padKeys<-SampleN( ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"], gGridNumCol * gGridNumRow)
 	testVals<-SampleN(padKeys, aNumLetters)
-
-	winSz<-[gVideoWidth,gVideoHeight]
 
 	PrefixPrintList("Grid:",padKeys)
 	PrefixPrintList("Test:",testVals)
@@ -121,7 +168,7 @@ define PresentRun(aNumLetters)
 	blankX<- currX + (Nth(padKb, 2) - currX)/2
 	blankY<-Nth(padKb, 3)+keyHeight+spc
 	blankKey <- [gBlankKeyText]
-	blankWidth<- ( Nth(padKb, 2) - currX ) + keyHeight # width==height
+	blankWidth <- ( Nth(padKb, 2) - currX ) + keyHeight # width==height
 	blankKb <- MakeKB( gWin, blankKey, blankX, blankY, 1, blankWidth, keyHeight, spc  )
 
 	allClickable<-Flatten([allClickable, GetClickable(blankKb)])
@@ -440,7 +487,7 @@ define Start(par)
 	# TODO check for existing subject output
 
 	#PresentRun(5)
-	ShowDistract()
+	ShowDistract(2000)
 }
 
 # return [Trim(token),Trim(lineleft)]
