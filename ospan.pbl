@@ -1,6 +1,6 @@
 #
 # eg
-#   pebl ospan.pbl --fullscreen -V DispMS=100 -s subject_id -v distract=distraction.txt
+#   pebl ospan.pbl --fullscreen -V DispMS=100 -s subject_id -v distract=distraction.txt -v run=rundefn.txt
 #
 #
 
@@ -392,6 +392,9 @@ define ParseArgs(args)
 			} elseif ( argname == "distract" )
 			{
 				gDistractionFile<-argval
+			} elseif ( argname == "run" )
+			{
+				gRunFile<-argval
 			} elseif ( argname == "drawdebug" )
 			{
 				gDrawDebug<-ToNumber( argval )
@@ -416,6 +419,7 @@ define Usage()
 	Print( "Arguments" )
 	Print( " -V DispMS=<milliseconds> # Time each stimulus letter shown. Default 1000" )
 	Print( " -V Distract=<path/to/a/file.txt> # File containing distraction tasks" )
+	Print( " -V run=<path/to/another/file.txt> # File containing run defns" )
 	Print( "" )
 	Print( "**Be careful/don't use spaces in these arguments" )
 }
@@ -435,6 +439,7 @@ define InitDefaults()
 	gDelKeyText <- "Del"
 	gBlankKeyText <- "Blank"
 	gDistractionFile <- ""
+	gRunFile<-""
 
 	gFGColor <- MakeColor("black")
 	gFGDisabledColor <- MakeColor("grey55")
@@ -468,6 +473,12 @@ define Start(par)
 	InitDefaults()
 	ParseArgs(par)
 
+	if ( gRunFile == "" )
+	{
+		Usage()
+		SignalFatalError( "No run definition specified" )
+	}
+
 	if ( gDistractionFile == "" )
 	{
 		Usage()
@@ -476,6 +487,8 @@ define Start(par)
 	gDistractionTasks<-LoadDistractionTasks( gDistractionFile )
 	# this is essentially a clone
 	gDistractWorkingSet<-SampleN( gDistractionTasks, Length( gDistractionTasks ) )
+
+	gRunDefn<-LoadRunDefn( gRunFile )
 
 	gDrawDebug<-DrawDebug(gDrawDebug)
 
@@ -510,6 +523,22 @@ define ParseFirstToken(sep, line )
 define LineLength( line )
 {
 	return Length( SplitString( line, "" ) )
+}
+
+define LoadRunDefn( a_File )
+{
+	Print( "Loading rundefn from " + a_File +"...")
+	rval<-[]
+
+
+	if ( Length( rval )== 0 )
+	{
+		SignalFatalError( "No run defns loaded" )
+	} else {
+		Print( "Loaded "+Length( rval)+" run defns" )
+	}
+
+	return rval
 }
 
 define LoadDistractionTasks( a_File )
