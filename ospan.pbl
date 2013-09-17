@@ -530,6 +530,73 @@ define LoadRunDefn( a_File )
 	Print( "Loading rundefn from " + a_File +"...")
 	rval<-[]
 
+	# a run:
+	#  run:<timeout>:{D|L}{1,}
+	# a special screen loaded from file
+	#  static:file.txt
+	#
+	#
+	#
+	# where
+	#  D : distraction task
+	#  L : target letter
+	# 
+	#
+	# eg 
+	#	-1:DDD # three distraction tasks only no timeout
+	
+
+
+	Loop( line, FileReadList( a_File ) )
+	{
+		line<-StripSpace( line )
+		idx<-FindInString( line, "#", 1 )
+		if ( idx == 1 )
+		{
+			#	it's a comment line
+		} else {
+			toks <- SplitString( line, ":")
+			if ( Length(toks) < 2 )
+			{
+				SignalFatalError( "Invalid run defn" );
+			}
+
+			type<-Lowercase( StripSpace(Nth(toks,1)) )
+			if ( type == "run" )
+			{
+				if ( Length( toks ) != 4 )
+				{
+					SignalFatalError( "Invalid run defn: " + line )
+				}
+
+				distractMS<-ToNumber( Nth(toks, 2) )
+				targetMS<-ToNumber( Nth( toks, 3 ) )
+
+				stages<-SplitString( Nth(toks, 4 ), "" )
+
+				numTarget<-0
+				Loop( stage, stages )
+				{
+					stage <- Uppercase( stage )
+					if ( stage == "T" )
+					{
+						numTarget <- numTarget + 1
+					} elseif ( stage != "D" )
+					{
+						SignalFatalError( "Invalid run defn (not 'D' or 'T') " + line )
+					}
+				}
+
+				defn<-["run", distractMS, targetMS, numTarget, stages]
+
+				rval<-Append( rval, defn )
+
+			} else {
+				SignalFatalError( "Unrecognised run defn" + type )
+			}
+
+		}
+	}
 
 	if ( Length( rval )== 0 )
 	{
