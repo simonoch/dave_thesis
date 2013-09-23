@@ -49,7 +49,46 @@ define LogSpam( str )
 	Print( str )
 }
 
-# show a single distract task, return 0/1 for success failure
+# return 1 if clicked, 0 if timeout
+define WaitForClick( a_WaitTO )
+{
+	rval<-0
+	if ( a_WaitTO > 0 )
+	{
+		# has timeout
+		continue<- 1
+		while( continue )
+		{
+			x<-WaitForMouseButtonWithTimeout( a_WaitTO )
+			if ( First( x )  == "<timeout>" )
+			{
+				continue<- 0
+				rval<- 0 
+			} elseif ( Nth( x, 4) == "<released>" )
+			{
+				continue<- 0
+				rval<-1
+			} else {
+				Print( "Huh: " + Nth(x, 4 ) )
+			}
+		}
+	} else {
+		# no timeout
+		continue<- 1
+		while( continue )
+		{
+			x<-WaitForMouseButton()
+			if ( Nth( x, 4 ) == "<released>" )
+			{
+				continue<-0
+			}
+		}
+		rval<-1
+	}
+	return rval
+}
+
+# show a single distract task, returns a list, first element 0/1 for success failure second element is time taken
 define ShowDistract(a_WaitTO)
 {
 	# fill up our list of tasks again
@@ -72,27 +111,13 @@ define ShowDistract(a_WaitTO)
 	AddObject(questionLabel,gWin)
 	Draw()
 
-	rval<-0
-	if ( a_WaitTO > 0 )
-	{
-		v<-WaitForMouseButtonWithTimeout(a_WaitTO)
-		# click returns a vector with coords
-		if ( Length( v ) == 1 )
-		{
-			# timeout appears to return text <timeout>
-			rval<- -1
-		}
-	} else
-	{
-		WaitForMouseButton()
-	}
+	elapsed<-GetTime()
+	rval<-WaitForClick( a_WaitTO )
+
+	elapsed<-GetTime() - elapsed
 	RemoveObject(questionLabel, gWin)
 
-	if ( rval == -1 )
-	{
-		# timed out => failed
-		rval <- 0
-	} else
+	if ( rval != 0 ) # not timeout
 	{
 		spc <- 8
 		keyHeight <- 1.9 * gLgFontSz
@@ -119,10 +144,32 @@ define ShowDistract(a_WaitTO)
 
 		DestroyKB( gWin, kb )
 	}
-	return rval
+	return [rval,elapsed]
 }
 
-define PresentRun(aNumLetters)
+define PresentRun(  distractMS, targetMS, numTarget, stages )
+{
+	Print( "PresentRun:" )
+	Print( "distractMS: " + distractMS )
+	Print( "targetMS: " + targetMS )
+	Print( "numTarget: " + numTarget )
+	Print( "stages: " + stages )
+
+
+	totDistractMS<-0
+
+
+	Loop( stage, stages )
+	{
+		stage <- Uppercase( stage )
+		if ( stage == "D" )
+		{
+			ShowDistract( distractMS );
+		}
+	}
+}
+
+define LegPresentRun(aNumLetters)
 {
 	ShowCursor(0)
   padKeys<-SampleN( ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"], gGridNumCol * gGridNumRow)
@@ -499,8 +546,18 @@ define Start(par)
 	# TODO replace spaces in subject with underscore
 	# TODO check for existing subject output
 
-	#PresentRun(5)
-	ShowDistract(2000)
+	#LegPresentRun(5)
+	#ShowDistract(2000)
+	Loop( defn, gRunDefn )
+	{
+		type <- Nth( defn, 1 )
+		if ( type == "run" )
+		{
+			PresentRun( Nth(defn, 2), Nth(defn, 3), Nth(defn, 4), Nth(defn, 5 ) )
+		} else {
+			SignalFatalError( "Unk run type: " +type )
+		}
+	}
 }
 
 # return [Trim(token),Trim(lineleft)]
@@ -531,7 +588,7 @@ define LoadRunDefn( a_File )
 	rval<-[]
 
 	# a run:
-	#  run:<timeout>:{D|L}{1,}
+	#  run:<distract_timeout>:<target_timeout>:{D|T}{1,}
 	# a special screen loaded from file
 	#  static:file.txt
 	#

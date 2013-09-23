@@ -1,2 +1,2 @@
-#stuff
-run:0:0:DDD
+#run:<distract_timeout>:<target_timeout>:{D|T}{1,}
+run:-1:0:DDD
