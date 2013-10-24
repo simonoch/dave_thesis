@@ -52,6 +52,12 @@ define LogSpam( str )
 # return 1 if clicked, 0 if timeout
 define WaitForClick( a_WaitTO )
 {
+	# soak any extraneous clicks because the program is fucking stupid...
+	# WaitForClickOnTarget returns on pressed, behaviour can't be changed 
+	# We get the released value here with no pressed. need to see the full click
+	# here - press followed by release
+	pressed<-0 
+
 	rval<-0
 	if ( a_WaitTO > 0 )
 	{
@@ -64,12 +70,13 @@ define WaitForClick( a_WaitTO )
 			{
 				continue<- 0
 				rval<- 0 
-			} elseif ( Nth( x, 4) == "<released>" )
+			} elseif ( Nth( x, 4) == "<pressed>" )
+			{
+				pressed <- 1
+			} elseif ( pressed == 1 and Nth( x, 4) == "<released>" )
 			{
 				continue<- 0
 				rval<-1
-			} else {
-				Print( "Huh: " + Nth(x, 4 ) )
 			}
 		}
 	} else {
@@ -78,7 +85,11 @@ define WaitForClick( a_WaitTO )
 		while( continue )
 		{
 			x<-WaitForMouseButton()
-			if ( Nth( x, 4 ) == "<released>" )
+
+			if ( Nth( x, 4 ) == "<pressed>" )
+			{
+				pressed <- 1
+			} elseif ( pressed == 1 and Nth( x, 4 ) == "<released>" )
 			{
 				continue<-0
 			}
