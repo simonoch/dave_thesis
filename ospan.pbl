@@ -256,7 +256,13 @@ define PresentRun(  distractMS, targetMS, numTarget, stages )
 
 
   padKeys<-SampleN( ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"], gGridNumCol * gGridNumRow)
-	testVals<-SampleN(padKeys, numTarget)
+	if ( numTarget > 0 )
+	{
+		testVals<-SampleN(padKeys, numTarget)
+	} else {
+		testVals<-[]
+	}
+
 
 	totDistractMS<-0
 
