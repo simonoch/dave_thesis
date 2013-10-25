@@ -102,6 +102,7 @@ define WaitForClick( a_WaitTO )
 # show a single distract task, returns a list, first element 0/1 for success failure second element is time taken
 define ShowDistract(a_WaitTO)
 {
+	ShowCursor(1)
 	# fill up our list of tasks again
 	if( Length( gDistractWorkingSet ) == 0 )
 	{
@@ -158,51 +159,21 @@ define ShowDistract(a_WaitTO)
 	return [rval,elapsed]
 }
 
-define PresentRun(  distractMS, targetMS, numTarget, stages )
-{
-	Print( "PresentRun:" )
-	Print( "distractMS: " + distractMS )
-	Print( "targetMS: " + targetMS )
-	Print( "numTarget: " + numTarget )
-	Print( "stages: " + stages )
-
-
-	totDistractMS<-0
-
-
-	Loop( stage, stages )
-	{
-		stage <- Uppercase( stage )
-		if ( stage == "D" )
-		{
-			ShowDistract( distractMS );
-		}
-	}
-}
-
-define LegPresentRun(aNumLetters)
+define ShowTargetLetter( testVal )
 {
 	ShowCursor(0)
-  padKeys<-SampleN( ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"], gGridNumCol * gGridNumRow)
-	testVals<-SampleN(padKeys, aNumLetters)
+	lText <- MakeLabel(testVal, gLgFont)
+	xPos<- gVideoWidth/2
+	yPos<- gVideoHeight/2
+	Move(lText, xPos,yPos)
+	AddObject(lText,gWin)
+	Draw()
+	Wait(gDispMS)
+	RemoveObject(lText,gWin)
+}
 
-	PrefixPrintList("Grid:",padKeys)
-	PrefixPrintList("Test:",testVals)
-
-	Loop( testVal, testVals )
-	{
-
-		lText <- MakeLabel(testVal, gLgFont)
-		xPos<- gVideoWidth/2
-		yPos<- gVideoHeight/2
-		Move(lText, xPos,yPos)
-		AddObject(lText,gWin)
-		Draw()
-		Wait(gDispMS)
-		RemoveObject(lText,gWin)
-	}
-
-
+define ShowTargetInputScreen(padKeys, testVals)
+{
 	spc <- 8
 	keyHeight <- 1.9 * gLgFontSz
 	cellHeight <- keyHeight + spc
@@ -274,6 +245,42 @@ define LegPresentRun(aNumLetters)
 	DestroyKB( gWin, blankKb )
 	DestroyKB( gWin, padKb )
 }
+
+define PresentRun(  distractMS, targetMS, numTarget, stages )
+{
+	Print( "PresentRun:" )
+	Print( "distractMS: " + distractMS )
+	Print( "targetMS: " + targetMS )
+	Print( "numTarget: " + numTarget )
+	Print( "stages: " + stages )
+
+
+  padKeys<-SampleN( ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"], gGridNumCol * gGridNumRow)
+	testVals<-SampleN(padKeys, numTarget)
+
+	totDistractMS<-0
+
+	iShownTarget<-0
+
+	Loop( stage, stages )
+	{
+		stage <- Uppercase( stage )
+		if ( stage == "D" )
+		{
+			ShowDistract( distractMS );
+		} else {
+			iShownTarget<-iShownTarget+1
+			ShowTargetLetter( Nth( testVals, iShownTarget ) )
+		}
+	}
+
+	if ( numTarget > 0 )
+	{
+		# show grid
+		ShowTargetInputScreen(padKeys, testVals)
+	}
+}
+
 
 define GetMouseInput( clickable, values, keyLabels, selLabels )
 {
@@ -557,8 +564,6 @@ define Start(par)
 	# TODO replace spaces in subject with underscore
 	# TODO check for existing subject output
 
-	#LegPresentRun(5)
-	#ShowDistract(2000)
 	Loop( defn, gRunDefn )
 	{
 		type <- Nth( defn, 1 )

@@ -1,2 +1,3 @@
 #run:<distract_timeout>:<target_timeout>:{D|T}{1,}
-run:-1:0:DDD
+run:-1:1000:DTDTDT
+#run:-1:0:DDD
