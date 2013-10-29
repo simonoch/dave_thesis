@@ -246,13 +246,46 @@ define ShowTargetInputScreen(padKeys, testVals)
 	DestroyKB( gWin, padKb )
 }
 
+
+define PresentStatic( timeout, staticData, isLast )
+{
+	Print( "PresentStatic"+isLast )
+
+	#questionLabel<-MakeLabel( question, gLgFont )
+	#xPos<- gVideoWidth/2
+	#yPos<- gVideoHeight/2
+	#Move(questionLabel, xPos,yPos)
+	#AddObject(questionLabel,gWin)
+	#Draw()
+
+	Draw()
+	if ( timeout > 0 ) {
+		WaitForAnyKeyDownWithTimeout( timeout )
+	} else {
+		if ( isLast )
+		{
+			# wait forever for the magic key combo will finish
+			Wait( 300000 ) 
+		} else {
+			# show next button
+			spc<- 8
+			keyHeight <- 1.9 * gLgFontSz
+			keyWidth<-3*keyHeight
+			kb <- MakeKB( gWin, ["Next"], gVideoWidth-keyWidth/2-spc, gVideoHeight-keyHeight/2-spc, 1, keyWidth, keyHeight, spc)
+
+			Draw()
+			resp<-WaitForClickOnTarget( GetClickable(kb), ["x"]  )
+		}
+	}
+}
+
 define PresentRun(  distractMS, targetMS, numTarget, stages )
 {
-	Print( "PresentRun:" )
-	Print( "distractMS: " + distractMS )
-	Print( "targetMS: " + targetMS )
-	Print( "numTarget: " + numTarget )
-	Print( "stages: " + stages )
+	#Print( "PresentRun:" )
+	#Print( "distractMS: " + distractMS )
+	#Print( "targetMS: " + targetMS )
+	#Print( "numTarget: " + numTarget )
+	#Print( "stages: " + stages )
 
 
   padKeys<-SampleN( ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"], gGridNumCol * gGridNumRow)
@@ -570,12 +603,17 @@ define Start(par)
 	# TODO replace spaces in subject with underscore
 	# TODO check for existing subject output
 
+	iDefnNum<- 0
+
 	Loop( defn, gRunDefn )
 	{
+		iDefnNum<-iDefnNum + 1
 		type <- Nth( defn, 1 )
 		if ( type == "run" )
 		{
 			PresentRun( Nth(defn, 2), Nth(defn, 3), Nth(defn, 4), Nth(defn, 5 ) )
+		} elseif ( type == "static" ) {
+			PresentStatic( Nth( defn, 2), Nth( defn, 3 ), iDefnNum == Length( gRunDefn ) )
 		} else {
 			SignalFatalError( "Unk run type: " +type )
 		}
@@ -670,6 +708,29 @@ define LoadRunDefn( a_File )
 
 				rval<-Append( rval, defn )
 
+			} elseif ( type == "static" )
+			{
+				if ( Length( toks ) < 3 )
+				{
+					SignalFatalError( "Unrecognised static file spec" + line )
+				}
+				# expect
+				# static:timeout:path/to/file/possibly/containing/a/colon
+				timeout<-ToNumber( Nth(toks, 2 ) )
+				file<-Nth(toks, 3 )
+				# in case it's a fully qualiified path
+				i <- 4
+				while ( i <= Length( toks ) )
+				{
+					file<-file+":"+Nth(toks, i )
+					i<-i+1
+				}
+
+				# read all the lines now so we fail hard & fast
+				lines<-FileReadList( file )
+
+				defn<-["static", timeout, lines]
+				rval<-Append( rval, defn )
 			} else {
 				SignalFatalError( "Unrecognised run defn" + type )
 			}
