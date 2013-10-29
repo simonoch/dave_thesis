@@ -251,6 +251,40 @@ define PresentStatic( timeout, staticData, isLast )
 {
 	Print( "PresentStatic"+isLast )
 
+	maxWidth<-0
+	maxHeight<-0
+	lineLabs<-[]
+	Loop( line, staticData )
+	{
+		l<-MakeLabel( line, gLgFont )
+		lineLabs<-Append(lineLabs, l )
+
+		sz<-GetSize( l )
+		if ( First( sz ) > maxWidth )
+		{
+			maxWidth<-First(sz )
+		}
+		if ( Last(sz) > maxHeight )
+		{
+			maxHeight<-Last(sz )
+		}
+	}
+
+	Print( "Have " + Length(staticData) + " lines" )
+	Print( "MaxWidth=" + maxWidth )
+	Print( "MaxHeight=" + maxHeight )
+
+	currX <- gVideoWidth/2 - maxWidth/2
+	currY <- gVideoHeight/2 - Length(staticData) * maxHeight * 0.5
+
+	Loop( lab, lineLabs )
+	{
+		Print( "(x,y)=(" + currX + ","+currY +")" )
+		Move( lab, currX, currY )
+		AddObject( lab, gWin )
+		currY<- currY + maxHeight
+	}
+
 	#questionLabel<-MakeLabel( question, gLgFont )
 	#xPos<- gVideoWidth/2
 	#yPos<- gVideoHeight/2
@@ -264,18 +298,22 @@ define PresentStatic( timeout, staticData, isLast )
 	} else {
 		if ( isLast )
 		{
-			# wait forever for the magic key combo will finish
-			Wait( 300000 ) 
+			# wait forever (1/2 an hour). Magic combo of Ctrl-Alt-Shift-\ ends pebl 
+			Wait( 1800000 ) 
 		} else {
 			# show next button
 			spc<- 8
 			keyHeight <- 1.9 * gLgFontSz
 			keyWidth<-3*keyHeight
 			kb <- MakeKB( gWin, ["Next"], gVideoWidth-keyWidth/2-spc, gVideoHeight-keyHeight/2-spc, 1, keyWidth, keyHeight, spc)
-
-			Draw()
-			resp<-WaitForClickOnTarget( GetClickable(kb), ["x"]  )
+			resp<-WaitForClickOnTarget( GetClickable(kb), ["whatevs"]  )
+			DestroyKB( gWin, kb )
 		}
+	}
+
+	Loop( lab, lineLabs )
+	{
+		RemoveObject( lab, gWin )
 	}
 }
 
