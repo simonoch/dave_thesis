@@ -11,4 +11,4 @@ static:-1:instructions.txt
 #run:-1:1000:DTDTDT
 # uncomment the following for no distract timeout, five pair of distraction followed by target 
 #run:-1:1000:DTDTDTDTDT
-#static:-1:bye.txt
+static:-1:bye.txt

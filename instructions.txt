@@ -10,4 +10,8 @@ appears to throw away real blank
 
 lines.
 <blank>
+If the very first line of the file
+is <centretext> the text for will
+be centred instead of left
+justified - like this page is.
 Enjoy.

@@ -247,10 +247,8 @@ define ShowTargetInputScreen(padKeys, testVals)
 }
 
 
-define PresentStatic( timeout, staticData, isLast )
+define PresentStatic( timeout, centred, staticData, isLast )
 {
-	Print( "PresentStatic"+isLast )
-
 	maxWidth<-0
 	maxHeight<-0
 	lineLabs<-[]
@@ -285,10 +283,13 @@ define PresentStatic( timeout, staticData, isLast )
 
 	Loop( lab, lineLabs )
 	{
-		currX <- gVideoWidth/2 #- maxWidth/2
-		#	left justify
-		currW<- Last( GetSize( lab ) ) 
-		currX <- currX - ( maxWidth - currW ) / 2
+		currX <- gVideoWidth/2
+		if ( centred == 0 )
+		{
+			#	left justify
+			currW<- Last( GetSize( lab ) ) 
+			currX <- currX - ( maxWidth - currW ) / 2
+		}
 		Print( "(x,y)=(" + currX + ","+currY +")" )
 		Move( lab, currX, currY )
 		AddObject( lab, gWin )
@@ -661,7 +662,7 @@ define Start(par)
 		{
 			PresentRun( Nth(defn, 2), Nth(defn, 3), Nth(defn, 4), Nth(defn, 5 ) )
 		} elseif ( type == "static" ) {
-			PresentStatic( Nth( defn, 2), Nth( defn, 3 ), iDefnNum == Length( gRunDefn ) )
+			PresentStatic( Nth( defn, 2), Nth( defn, 3 ), Nth(defn, 4), iDefnNum == Length( gRunDefn ) )
 		} else {
 			SignalFatalError( "Unk run type: " +type )
 		}
@@ -777,7 +778,17 @@ define LoadRunDefn( a_File )
 				# read all the lines now so we fail hard & fast
 				lines<-FileReadList( file )
 
-				defn<-["static", timeout, lines]
+				centred<-0
+				if ( Length( lines ) > 0 )
+				{
+					if ( StripSpace( Lowercase( Nth(lines, 1) ) ) == "<centretext>" )
+					{
+						lines<-Rest(lines)
+						centred<-1
+					}
+				}
+
+				defn<-["static", timeout, centred, lines]
 				rval<-Append( rval, defn )
 			} else {
 				SignalFatalError( "Unrecognised run defn" + type )
