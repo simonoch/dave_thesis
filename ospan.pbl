@@ -244,6 +244,7 @@ define ShowTargetInputScreen(padKeys, testVals)
 	}
 	DestroyKB( gWin, blankKb )
 	DestroyKB( gWin, padKb )
+	return userInput
 }
 
 
@@ -328,15 +329,18 @@ define PresentStatic( timeout, centred, staticData, isLast )
 	}
 }
 
+define MungeString( arr )
+{
+	rval<-""
+	Loop( c, arr )
+	{
+		rval<-rval+c
+	}
+	return rval
+}
+
 define PresentRun(  distractMS, targetMS, numTarget, stages )
 {
-	#Print( "PresentRun:" )
-	#Print( "distractMS: " + distractMS )
-	#Print( "targetMS: " + targetMS )
-	#Print( "numTarget: " + numTarget )
-	#Print( "stages: " + stages )
-
-
   padKeys<-SampleN( ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"], gGridNumCol * gGridNumRow)
 	if ( numTarget > 0 )
 	{
@@ -345,6 +349,7 @@ define PresentRun(  distractMS, targetMS, numTarget, stages )
 		testVals<-[]
 	}
 
+	rval<-[]
 
 	totDistractMS<-0
 
@@ -355,7 +360,8 @@ define PresentRun(  distractMS, targetMS, numTarget, stages )
 		stage <- Uppercase( stage )
 		if ( stage == "D" )
 		{
-			ShowDistract( distractMS );
+			dRes<-ShowDistract( distractMS )
+			rval<-Append( rval, Merge( [stage], dRes ) );
 		} else {
 			iShownTarget<-iShownTarget+1
 			ShowTargetLetter( Nth( testVals, iShownTarget ) )
@@ -365,8 +371,10 @@ define PresentRun(  distractMS, targetMS, numTarget, stages )
 	if ( numTarget > 0 )
 	{
 		# show grid
-		ShowTargetInputScreen(padKeys, testVals)
+		userInput<-ShowTargetInputScreen(padKeys, testVals)
+		rval<-Append( rval, [ "T", MungeString( testVals ), MungeString( userInput ) ] )
 	}
+	return rval
 }
 
 
@@ -621,6 +629,14 @@ define InitDefaults()
   gWin <- MakeWindow("white")
 }
 
+define WriteRunResult( stages, runResult )
+{
+	Loop( result, runResult )
+	{
+		Print( Nth( result, 1 ) + ":" + Nth( result, 2 ) + ":"+Nth(result,3 ) )
+	}
+}
+
 define Start(par)
 {
 	InitDefaults()
@@ -660,7 +676,9 @@ define Start(par)
 		type <- Nth( defn, 1 )
 		if ( type == "run" )
 		{
-			PresentRun( Nth(defn, 2), Nth(defn, 3), Nth(defn, 4), Nth(defn, 5 ) )
+			stages<-Nth(defn, 5 )
+			runRes<-PresentRun( Nth(defn, 2), Nth(defn, 3), Nth(defn, 4), stages )
+			WriteRunResult( stages, runRes )
 		} elseif ( type == "static" ) {
 			PresentStatic( Nth( defn, 2), Nth( defn, 3 ), Nth(defn, 4), iDefnNum == Length( gRunDefn ) )
 		} else {
