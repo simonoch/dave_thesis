@@ -1,7 +1,7 @@
 # lines beginning with a '#' are comments, they are ignored
 #run:<distract_timeout>:<target_timeout>:{D|T}{1,}
 #
-static:-1:hello.txt
+#static:-1:hello.txt
 static:-1:instructions.txt
 # the following to have three distractoin tasks in a row presented no grid or target letters
 #run:-1:0:DDD
@@ -11,4 +11,4 @@ static:-1:instructions.txt
 #run:-1:1000:DTDTDT
 # uncomment the following for no distract timeout, five pair of distraction followed by target 
 #run:-1:1000:DTDTDTDTDT
-static:-1:bye.txt
+#static:-1:bye.txt

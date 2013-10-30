@@ -256,17 +256,24 @@ define PresentStatic( timeout, staticData, isLast )
 	lineLabs<-[]
 	Loop( line, staticData )
 	{
-		l<-MakeLabel( line, gLgFont )
+		if ( StripSpace( Lowercase( line ) ) == "<blank>" ) {
+			l<-MakeLabel( "", gLgFont )
+		} else {
+			l<-MakeLabel( line, gLgFont )
+		}
 		lineLabs<-Append(lineLabs, l )
 
 		sz<-GetSize( l )
-		if ( First( sz ) > maxWidth )
+
+		h<-First(sz)
+		w<-Last(sz)
+		if ( w > maxWidth )
 		{
-			maxWidth<-First(sz )
+			maxWidth<- w
 		}
-		if ( Last(sz) > maxHeight )
+		if ( h > maxHeight )
 		{
-			maxHeight<-Last(sz )
+			maxHeight<-h
 		}
 	}
 
@@ -274,11 +281,14 @@ define PresentStatic( timeout, staticData, isLast )
 	Print( "MaxWidth=" + maxWidth )
 	Print( "MaxHeight=" + maxHeight )
 
-	currX <- gVideoWidth/2 - maxWidth/2
 	currY <- gVideoHeight/2 - Length(staticData) * maxHeight * 0.5
 
 	Loop( lab, lineLabs )
 	{
+		currX <- gVideoWidth/2 #- maxWidth/2
+		#	left justify
+		currW<- Last( GetSize( lab ) ) 
+		currX <- currX - ( maxWidth - currW ) / 2
 		Print( "(x,y)=(" + currX + ","+currY +")" )
 		Move( lab, currX, currY )
 		AddObject( lab, gWin )

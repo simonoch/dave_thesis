@@ -1,9 +1,13 @@
 Put some instructions in here.
 You will have to do the spacing
 and line split yourself.
-
+<blank>
 You can add empty lines in the
-middle, probably don't add them
-to the start or end of a file.
+middle by putting <blank> on a
+line by itself. For some reason
+known only to it's creator, PEBL
+appears to throw away real blank
 
+lines.
+<blank>
 Enjoy.
