@@ -151,11 +151,19 @@ define ShowDistract(a_WaitTO)
 
 		if ( ToNumber( resp ) == truthVal )
 		{
+			# return 1 to indicate correct response
 			rval <- 1
+		} else {
+			# return 0 to indicate incorrect response
+			rval <- 0
 		}
 
 		DestroyKB( gWin, kb )
+	} else {
+		# return -1 to indicate timeout in repsonse to question
+		rval <- -1
 	}
+
 	return [rval,elapsed]
 }
 

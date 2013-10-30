@@ -7,7 +7,7 @@
 # the following to have three distractoin tasks in a row presented no grid or target letters
 #run:-1:0:DDD
 # the following to have three target letters only and the grid
-run:-1:1000:TDT
+run:-1:1000:D
 # no timeout, three pair of distraction followed by target 
 #run:-1:1000:DTDTDT
 # uncomment the following for no distract timeout, five pair of distraction followed by target 
