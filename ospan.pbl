@@ -574,6 +574,9 @@ define ParseArgs(args)
 				{
 					gDrawDebug <- 1
 				}
+			} elseif ( argname == "resultsdir" )
+			{
+				gResultsDir<- argval
 			} else
 			{
 				Usage()
@@ -632,17 +635,54 @@ define InitDefaults()
 	gSmlFont<- MakeFont( "Vera.ttf",0,20,gFGColor,gBGColor,0)
 	gDbgFont<-MakeFont(  "Vera.ttf",0,20,gDbgColor,gBGColor,0)
 
+	gResultsDir<-"."
+
 	gDrawDebug<-0
 
   gWin <- MakeWindow("white")
 }
 
+# return [avgTimeDistract,pctCorrectDistract]
 define WriteRunResult( stages, runResult )
 {
+	pctCorrectDistract<- -1
+	avgTimeDistract<- -1
+
+	totTimeDistract<-0
+	numCorrectDistract<-0
+	totNumDistract<-0
 	Loop( result, runResult )
 	{
-		Print( Nth( result, 1 ) + ":" + Nth( result, 2 ) + ":"+Nth(result,3 ) )
+		if ( Nth( result, 1 ) == "D" )
+		{
+			success<-Nth(result,2)
+			ms<-Nth(result, 3)
+			totTimeDistract<- totTimeDistract+ms
+			if ( success == 1 )
+			{
+				numCorrectDistract<-numCorrectDistract+1
+			}
+			totNumDistract<- totNumDistract + 1
+		}
+		FilePrint( gSubOut, Nth( result, 1 ) + "," + Nth( result, 2 ) + ","+Nth(result,3 ) )
 	}
+	if ( totNumDistract > 0 ) {
+		pctCorrectDistract<- numCorrectDistract / totNumDistract
+		avgTimeDistract<- totTimeDistract / totNumDistract
+	}
+
+	return [avgTimeDistract,pctCorrectDistract]
+}
+
+define OpenSubOut()
+{
+	subNoSpc<-ReplaceChar( gSubNum, " ", "_" )
+
+	of<-gResultsDir+"/"+subNoSpc+".spanout"
+
+	gSubOut<-FileOpenAppend( of )
+
+	FilePrint( gSubOut, "NEWSESSION:" +TimeStamp() )
 }
 
 define Start(par)
@@ -673,6 +713,7 @@ define Start(par)
 	{
 		gSubNum<-GetSubNum( gWin )	
 	}
+	OpenSubOut()
 	# TODO replace spaces in subject with underscore
 	# TODO check for existing subject output
 
