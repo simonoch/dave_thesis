@@ -347,7 +347,7 @@ define MungeString( arr )
 	return rval
 }
 
-define PresentRun(  distractMS, targetMS, numTarget, stages )
+define PresentRun(  distractMS, targetMS, numTarget, stages, feedback )
 {
   padKeys<-SampleN( ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"], gGridNumCol * gGridNumRow)
 	if ( numTarget > 0 )
@@ -381,6 +381,40 @@ define PresentRun(  distractMS, targetMS, numTarget, stages )
 		# show grid
 		userInput<-ShowTargetInputScreen(padKeys, testVals)
 		rval<-Append( rval, [ "T", MungeString( testVals ), MungeString( userInput ) ] )
+	}
+
+	if ( feedback == 1 )
+	{
+		distractCorrect<- 0
+		distractTotal<- 0
+		targetCorrect<- 0
+		targetTotal<- numTarget
+
+		Loop( task, rval )
+		{
+			if ( Nth( task, 1 ) == "D" )
+			{
+				if ( Nth( task, 2 ) == 1 )
+				{
+					distractCorrect <- distractCorrect + 1
+				}
+				distractTotal<- distractTotal + 1
+			} else {
+				#targetCorrect <- targetCorrect + 1
+				i<- 1
+				while ( i <= Length( testVals ) )
+				{
+					if ( Nth( testVals, i ) == Nth( userInput, i ) )
+					{
+						targetCorrect <- targetCorrect + 1
+					}
+
+					i<- i + 1
+				}
+			}
+		}
+		Print( "Distract: Correct " + distractCorrect +"/"+distractTotal )
+		Print( "Target: Correct " + targetCorrect +"/"+targetTotal )
 	}
 	return rval
 }
@@ -558,6 +592,14 @@ define ParseArgs(args)
 				{
 					SignalFatalError( "Invalid milliseconds value for DispMS")
 				}
+			} elseif ( argname == "feedback" )
+			{
+				gFeedback<-ToNumber( argval )
+				if ( gFeedback > 0 ) {
+					gFeedback<- 1
+				} else {
+					gFeedback<- 0
+				}
 			} elseif ( argname == "distract" )
 			{
 				gDistractionFile<-argval
@@ -603,8 +645,9 @@ define InitDefaults()
 	# how long Target Letters are shown for
 	gDispMS <- 1000
 
-	gGridNumCol<-3
-	gGridNumRow<-4
+	gGridNumCol<- 3
+	gGridNumRow<- 4
+	gFeedback<- 1
 
 	gDoneKeyText <- "Done"
 	gClearKeyText <- "Clear"
@@ -726,7 +769,7 @@ define Start(par)
 		if ( type == "run" )
 		{
 			stages<-Nth(defn, 5 )
-			runRes<-PresentRun( Nth(defn, 2), Nth(defn, 3), Nth(defn, 4), stages )
+			runRes<-PresentRun( Nth(defn, 2), Nth(defn, 3), Nth(defn, 4), stages, gFeedback )
 			WriteRunResult( stages, runRes )
 		} elseif ( type == "static" ) {
 			PresentStatic( Nth( defn, 2), Nth( defn, 3 ), Nth(defn, 4), iDefnNum == Length( gRunDefn ) )
