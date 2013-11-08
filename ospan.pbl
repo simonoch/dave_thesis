@@ -49,6 +49,36 @@ define LogSpam( str )
 	Print( str )
 }
 
+define StrReplace( str, from, to )
+{
+	if ( StringLength( from ) > 0 )
+	{
+		rval<-""
+		lstr<-Lowercase( str )
+		lfrom<-Lowercase( from )
+
+		last<-1
+		idx<-FindInString( lstr, lfrom, last )
+		while ( idx > 0 )
+		{
+			rval<-rval+Substring( str, last, idx - last )
+			rval<-rval+to
+
+			last<-idx+StringLength( from )
+
+			idx<-FindInString( lstr, lfrom, last+1 )
+		}
+
+		if ( last <= StringLength( str ) )
+		{
+			rval<-rval+Substring( str, last, StringLength( str ) - last + 1 )
+		}
+	} else {
+	 rval<-str
+	}
+	return rval
+}
+
 # return 1 if clicked, 0 if timeout
 define WaitForClick( a_WaitTO )
 {
@@ -413,12 +443,45 @@ define PresentRun(  distractMS, targetMS, numTarget, stages, feedback )
 				}
 			}
 		}
-		Print( "Distract: Correct " + distractCorrect +"/"+distractTotal )
-		Print( "Target: Correct " + targetCorrect +"/"+targetTotal )
+
+		lines<-[]
+
+		if ( distractTotal > 0 )
+		{
+			if ( targetTotal > 0 )
+			{
+				lines<-gFeedbackDT
+			} else
+			{
+				lines<-gFeedbackDOnly
+			}
+		} elseif( targetTotal > 0 ) 
+		{
+			lines<-gFeedbackTOnly
+		}
+		if ( Length( lines ) > 0 )
+		{
+			dispLines<-[]
+			Loop( line, lines )
+			{
+				line<-StrReplace( line, "%CORRECT_T%", targetCorrect )
+				line<-StrReplace( line, "%CORRECT_D%", distractCorrect )
+				line<-StrReplace( line, "%NUM_T%", targetTotal )
+				line<-StrReplace( line, "%NUM_D%", distractTotal )
+				dispLines<-Append( dispLines, line )
+			}
+
+			Loop( line, dispLines )
+			{
+				Print( line )
+			}
+
+			Print( "Distract: Correct " + distractCorrect +"/"+distractTotal )
+			Print( "Target: Correct " + targetCorrect +"/"+targetTotal )
+		}
 	}
 	return rval
 }
-
 
 define GetMouseInput( clickable, values, keyLabels, selLabels )
 {
@@ -648,6 +711,11 @@ define InitDefaults()
 	gGridNumCol<- 3
 	gGridNumRow<- 4
 	gFeedback<- 1
+
+	gFeedbackTOnly <- [ "You got %CORRECT_T% of %NUM_T% correct"]
+	gFeedbackDOnly <- [ "You got %CORRECT_D% of %NUM_D% correct"]
+	gFeedbackDT <- [ "You got %CORRECT_D%/%NUM_D% problems correct and %CORRECT_T%/%NUM_T% target",
+										"letters correct" ]
 
 	gDoneKeyText <- "Done"
 	gClearKeyText <- "Clear"
