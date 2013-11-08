@@ -471,13 +471,7 @@ define PresentRun(  distractMS, targetMS, numTarget, stages, feedback )
 				dispLines<-Append( dispLines, line )
 			}
 
-			Loop( line, dispLines )
-			{
-				Print( line )
-			}
-
-			Print( "Distract: Correct " + distractCorrect +"/"+distractTotal )
-			Print( "Target: Correct " + targetCorrect +"/"+targetTotal )
+			PresentStatic( gFeedbackTimeout, 0, dispLines, 0 )
 		}
 	}
 	return rval
@@ -655,6 +649,13 @@ define ParseArgs(args)
 				{
 					SignalFatalError( "Invalid milliseconds value for DispMS")
 				}
+			} elseif ( argname == "feedbacktimeout" )
+			{
+				gFeedbackTimeout<-ToNumber( argval )
+				if ( gFeedbackTimeout <= 0 )
+				{
+					gFeedbackTimeout<- -1
+				}
 			} elseif ( argname == "feedback" )
 			{
 				gFeedback<-ToNumber( argval )
@@ -712,6 +713,7 @@ define InitDefaults()
 	gGridNumRow<- 4
 	gFeedback<- 1
 
+	gFeedbackTimeout<- -1
 	gFeedbackTOnly <- [ "You got %CORRECT_T% of %NUM_T% correct"]
 	gFeedbackDOnly <- [ "You got %CORRECT_D% of %NUM_D% correct"]
 	gFeedbackDT <- [ "You got %CORRECT_D%/%NUM_D% problems correct and %CORRECT_T%/%NUM_T% target",
