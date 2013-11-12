@@ -177,7 +177,7 @@ define ShowDistract(a_WaitTO)
 		keyWidth<-3*keyHeight
 		kb <- MakeKB( gWin, ["True","False"], xPos-keyWidth/2, yPos, 2, keyWidth, keyHeight, spc)
 
-		resp<-WaitForClickOnTarget( GetClickable(kb), ["1", "0"]  )
+		resp<-GetKBInput( GetClickable( kb ), ["1", "0"]  )
 
 		if ( ToNumber( resp ) == truthVal )
 		{
@@ -314,10 +314,6 @@ define PresentStatic( timeout, centred, staticData, isLast )
 		}
 	}
 
-	Print( "Have " + Length(staticData) + " lines" )
-	Print( "MaxWidth=" + maxWidth )
-	Print( "MaxHeight=" + maxHeight )
-
 	currY <- gVideoHeight/2 - Length(staticData) * maxHeight * 0.5
 
 	Loop( lab, lineLabs )
@@ -329,22 +325,15 @@ define PresentStatic( timeout, centred, staticData, isLast )
 			currW<- Last( GetSize( lab ) ) 
 			currX <- currX - ( maxWidth - currW ) / 2
 		}
-		Print( "(x,y)=(" + currX + ","+currY +")" )
+		#Print( "(x,y)=(" + currX + ","+currY +")" )
 		Move( lab, currX, currY )
 		AddObject( lab, gWin )
 		currY<- currY + maxHeight
 	}
 
-	#questionLabel<-MakeLabel( question, gLgFont )
-	#xPos<- gVideoWidth/2
-	#yPos<- gVideoHeight/2
-	#Move(questionLabel, xPos,yPos)
-	#AddObject(questionLabel,gWin)
-	#Draw()
-
 	Draw()
 	if ( timeout > 0 ) {
-		WaitForAnyKeyDownWithTimeout( timeout )
+		WaitForClick( timeout )
 	} else {
 		if ( isLast )
 		{
@@ -356,7 +345,7 @@ define PresentStatic( timeout, centred, staticData, isLast )
 			keyHeight <- 1.9 * gLgFontSz
 			keyWidth<-3*keyHeight
 			kb <- MakeKB( gWin, ["Next"], gVideoWidth-keyWidth/2-spc, gVideoHeight-keyHeight/2-spc, 1, keyWidth, keyHeight, spc)
-			resp<-WaitForClickOnTarget( GetClickable(kb), ["whatevs"]  )
+			resp<-GetKBInput( GetClickable( kb ), ["whatevs"]  )
 			DestroyKB( gWin, kb )
 		}
 	}
@@ -500,7 +489,7 @@ define GetMouseInput( clickable, values, keyLabels, selLabels )
 	done<-0 
 	while ( done == 0 )
 	{
-		resp<-WaitForClickOnTarget( clickable, values )
+		resp<-GetKBInput( clickable, values )
 		if ( resp == gDoneKeyText )
 		{
 			# only valid if all values have been filled in
@@ -838,8 +827,8 @@ define Start(par)
 		type <- Nth( defn, 1 )
 		if ( type == "run" )
 		{
-			stages<-Nth(defn, 5 )
-			runRes<-PresentRun( Nth(defn, 2), Nth(defn, 3), Nth(defn, 4), stages, gFeedback )
+			stages<-Nth(defn, 5)
+			runRes<-PresentRun( Nth(defn, 2), Nth(defn, 3), Nth(defn, 4), stages, Nth(defn, 6) )
 			WriteRunResult( stages, runRes )
 		} elseif ( type == "static" ) {
 			PresentStatic( Nth( defn, 2), Nth( defn, 3 ), Nth(defn, 4), iDefnNum == Length( gRunDefn ) )
@@ -910,6 +899,7 @@ define LoadRunDefn( a_File )
 			type<-Lowercase( StripSpace(Nth(toks,1)) )
 			if ( type == "run" )
 			{
+				feedback<-0
 				if ( Length( toks ) != 4 )
 				{
 					SignalFatalError( "Invalid run defn: " + line )
@@ -920,6 +910,8 @@ define LoadRunDefn( a_File )
 
 				stages<-SplitString( Nth(toks, 4 ), "" )
 
+				stagesNoFB<-[]
+
 				numTarget<-0
 				Loop( stage, stages )
 				{
@@ -927,13 +919,20 @@ define LoadRunDefn( a_File )
 					if ( stage == "T" )
 					{
 						numTarget <- numTarget + 1
-					} elseif ( stage != "D" )
+						stagesNoFB<-Append( stagesNoFB, stage )
+					} elseif ( stage == "D" )
+					{
+						stagesNoFB<-Append( stagesNoFB, stage )
+					} elseif ( stage == "F" )
+					{
+						feedback<-1
+					} else
 					{
 						SignalFatalError( "Invalid run defn (not 'D' or 'T') " + line )
 					}
 				}
 
-				defn<-["run", distractMS, targetMS, numTarget, stages]
+				defn<-["run", distractMS, targetMS, numTarget, stagesNoFB,feedback]
 
 				rval<-Append( rval, defn )
 
@@ -1031,6 +1030,13 @@ define LoadDistractionTasks( a_File )
 		SignalFatalError( "No distraction tasks loaded" )
 	}
 	Print( "Loaded " + Length(rval)+" distraction tasks" )
+	return rval
+}
+
+define GetKBInput( kb, value_map )
+{
+	rval<- WaitForClickOnTarget(  kb, value_map )
+
 	return rval
 }
 
