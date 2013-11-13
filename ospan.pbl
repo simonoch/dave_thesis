@@ -682,7 +682,7 @@ define ParseArgs(args)
 			} elseif ( argname == "batteryfeedback" )
 			{
 				gBatteryFeedback<-ToNumber( argval )
-				if ( gBatteryFeedback < 0 )
+				if ( gBatteryFeedback <= 0 )
 				{
 					gBatteryFeedback <- 0 
 				} else {
@@ -705,6 +705,16 @@ define ParseArgs(args)
 					SignalFatalError( "Invalid gDistractMultiplier: " +argval )
 				}
 				Print( "gDistractTimeoutMultiplier set to " + gDistractTimeoutMultiplier )
+			} elseif ( argname == "requirethresholdprebattery" )
+			{
+				gRequireThresholdPreBattery<-ToNumber( argval )
+				if ( gRequireThresholdPreBattery <= 0 )
+				{
+					gRequireThresholdPreBattery <- 0 
+				} else {
+					gRequireThresholdPreBattery <- 1
+				}
+				Print( "gRequireThresholdPreBattery set to " + gRequireThresholdPreBattery )
 			} else
 			{
 				Usage()
@@ -738,8 +748,11 @@ define InitDefaults()
 	gFeedbackTimeout<- -1
 	gFeedbackTOnly <- [ "You got %CORRECT_T% of %NUM_T% correct"]
 	gFeedbackDOnly <- [ "You got %CORRECT_D% of %NUM_D% correct"]
-	gFeedbackDT <- [ "You got %CORRECT_D%/%NUM_D% problems correct and %CORRECT_T%/%NUM_T% target",
-										"letters correct" ]
+	gFeedbackDT <- [ "You got %CORRECT_D%/%NUM_D% problems correct and",
+										"%CORRECT_T%/%NUM_T% target letters correct" ]
+
+	gAbortThresholdMsg<- [ "Test cannot proceed - not meeting distract threshold" ]
+
 
 	gDoneKeyText <- "Done"
 	gClearKeyText <- "Clear"
@@ -776,6 +789,7 @@ define InitDefaults()
 	gNumCorrectDistract<-0
 	gTimesDistract<-[]
 
+	gRequireThresholdPreBattery<-1
 	gDistractTimeoutMinimum<-1000
 	gDistractTimeoutMultiplier<-1.25	# timeout=avg+multiplier*stddev
 
@@ -869,72 +883,66 @@ define Start(par)
 	# TODO check for existing subject output
 
 	iDefnNum<- 0
+	abort <- 0
 
 	Loop( defn, gRunDefn )
 	{
-		iDefnNum<-iDefnNum + 1
-		type <- Nth( defn, 1 )
-		if ( type == "run" )
+		if ( abort != 1 )
 		{
-			stages<-Nth(defn, 5)
-			runRes<-PresentRun( Nth(defn, 2), Nth(defn, 3), Nth(defn, 4), stages, Nth(defn, 6) )
-			ProcessRunResult( stages, runRes, 0 )	# zero means don't write
-		} elseif ( type == "static" ) {
-			PresentStatic( Nth( defn, 2), Nth( defn, 3 ), Nth(defn, 4), iDefnNum == Length( gRunDefn ) )
-		} elseif ( type == "battery" ) {
-			# PresentRun(  distractMS, targetMS, numTarget, stages, feedback )
-			reps<-Nth( defn, 2 )
-			min<-Nth(defn, 3)
-			max<-Nth(defn, 4 )
-			target_timeout<-Nth( defn, 5 )
-
-
-			Print( "DoBattery" )
-			Print( "reps="+reps )
-			Print( "min="+min )
-			Print( "max="+max )
-			Print( "target_timeout="+target_timeout )
-			abort<- 0
-			distract_timeout<- -1
-			if ( gTotNumDistract > 0 )
+			iDefnNum<-iDefnNum + 1
+			type <- Nth( defn, 1 )
+			if ( type == "run" )
 			{
-				pctCorrect<- gNumCorrectDistract / gTotNumDistract
+				stages<-Nth(defn, 5)
+				runRes<-PresentRun( Nth(defn, 2), Nth(defn, 3), Nth(defn, 4), stages, Nth(defn, 6) )
+				ProcessRunResult( stages, runRes, 0 )	# zero means don't write
+			} elseif ( type == "static" ) {
+				PresentStatic( Nth( defn, 2), Nth( defn, 3 ), Nth(defn, 4), iDefnNum == Length( gRunDefn ) )
+			} elseif ( type == "battery" ) {
+				reps<-Nth( defn, 2 )
+				min<-Nth(defn, 3)
+				max<-Nth(defn, 4 )
+				target_timeout<-Nth( defn, 5 )
 
-				if ( pctCorrect < gBatteryThreshold )
+				distract_timeout<- -1
+				if ( gTotNumDistract > 0 )
 				{
-					abort <- 1
-				} else {
-					distract_timeout <- Mean( gTimesDistract )
-					distract_timeout <- distract_timeout + gDistractTimeoutMultiplier * StdDev( gTimesDistract )
-					distract_timeout<- Max( [distract_timeout, gDistractTimeoutMinimum ] )
-				}
-			}
+					pctCorrect<- gNumCorrectDistract / gTotNumDistract
 
-			if ( abort == 1 )
-			{
-				SignalFatalError( "TODO: abort battery" )
-			} else {
-				Print( "distract_timeout="+distract_timeout )
-
-				lens<-Sequence( min, max, 1 )
-				lens<-Flatten( ShuffleRepeat( lens, reps ) )
-
-				# PresentRun(  distractMS, targetMS, numTarget, stages, feedback )
-				Loop( runLen, lens )
-				{
-					stages<-[]
-					Loop( i, Sequence( 1, runLen, 1 ) )
+					if ( gRequireThresholdPreBattery == 1 and pctCorrect < gBatteryThreshold )
 					{
-						stages<-Append(stages, "D" )
-						stages<-Append(stages, "T" )
+						abort <- 1
+					} else {
+						distract_timeout <- Mean( gTimesDistract )
+						distract_timeout <- distract_timeout + gDistractTimeoutMultiplier * StdDev( gTimesDistract )
+						distract_timeout<- Max( [distract_timeout, gDistractTimeoutMinimum ] )
 					}
-					
-					runRes<-PresentRun( distract_timeout, target_timeout, runLen, stages, gBatteryFeedback )
-					ProcessRunResult( stages, runRes, 1 )
 				}
+
+				if ( abort == 1 )
+				{
+					PresentStatic( -1, 1, gAbortThresholdMsg, 1 )
+				} else {
+					lens<-Sequence( min, max, 1 )
+					lens<-Flatten( ShuffleRepeat( lens, reps ) )
+
+					# PresentRun(  distractMS, targetMS, numTarget, stages, feedback )
+					Loop( runLen, lens )
+					{
+						stages<-[]
+						Loop( i, Sequence( 1, runLen, 1 ) )
+						{
+							stages<-Append(stages, "D" )
+							stages<-Append(stages, "T" )
+						}
+						
+						runRes<-PresentRun( distract_timeout, target_timeout, runLen, stages, gBatteryFeedback )
+						ProcessRunResult( stages, runRes, 1 )
+					}
+				}
+			} else {
+				SignalFatalError( "Unk run type: " +type )
 			}
-		} else {
-			SignalFatalError( "Unk run type: " +type )
 		}
 	}
 }
