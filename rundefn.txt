@@ -6,7 +6,8 @@
 static:500:hello.txt
 #static:-1:instructions.txt
 # the following to have three distractoin tasks in a row presented no grid or target letters
-#run:-1:0:DTF
+run:-1:0:DD
+static:500:hello.txt
 battery:1:2:2:2000
 #run:-1:0:DF
 #static:1000:hello.txt

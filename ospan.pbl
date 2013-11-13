@@ -767,7 +767,7 @@ define InitDefaults()
 }
 
 # return [avgTimeDistract,pctCorrectDistract]
-define WriteRunResult( stages, runResult )
+define ProcessRunResult( stages, runResult, write )
 {
 	pctCorrectDistract<- -1
 	avgTimeDistract<- -1
@@ -788,7 +788,10 @@ define WriteRunResult( stages, runResult )
 			}
 			totNumDistract<- totNumDistract + 1
 		}
-		FilePrint( gSubOut, Nth( result, 1 ) + "," + Nth( result, 2 ) + ","+Nth(result,3 ) )
+		if ( write != 0 )
+		{
+			FilePrint( gSubOut, Nth( result, 1 ) + "," + Nth( result, 2 ) + ","+Nth(result,3 ) )
+		}
 	}
 
 	if ( totNumDistract > 0 ) {
@@ -855,7 +858,7 @@ define Start(par)
 		{
 			stages<-Nth(defn, 5)
 			runRes<-PresentRun( Nth(defn, 2), Nth(defn, 3), Nth(defn, 4), stages, Nth(defn, 6) )
-			#WriteRunResult( stages, runRes )
+			ProcessRunResult( stages, runRes, 0 )	# zero means don't write
 		} elseif ( type == "static" ) {
 			PresentStatic( Nth( defn, 2), Nth( defn, 3 ), Nth(defn, 4), iDefnNum == Length( gRunDefn ) )
 		} elseif ( type == "battery" ) {
@@ -880,8 +883,9 @@ define Start(par)
 				if ( pctCorrect < gBatteryThreshold )
 				{
 					abort <- 1
+				} else {
+					SignalFatalError( "TODO: calc distract_timeout" )
 				}
-				SignalFatalError( "TODO: calc distract_timeout" )
 			}
 
 			if ( abort == 1 )
@@ -904,7 +908,7 @@ define Start(par)
 					}
 					
 					runRes<-PresentRun( distract_timeout, target_timeout, runLen, stages, gBatteryFeedback )
-					WriteRunResult( stages, runRes )
+					ProcessRunResult( stages, runRes, 1 )
 				}
 			}
 		} else {
