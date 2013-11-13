@@ -672,6 +672,22 @@ define ParseArgs(args)
 			} elseif ( argname == "resultsdir" )
 			{
 				gResultsDir<- argval
+			} elseif ( argname == "batterythreshold" )
+			{
+				gBatteryThreshold<- ToNumber( argval )
+				if ( gBatterAbortThreshold >= 1 )
+				{
+					SignalFatalError( "BatteryThreshold must be less than 1" )
+				}
+			} elseif ( argname == "batteryfeedback" )
+			{
+				gBatteryFeedback<-ToNumber( argval )
+				if ( gBatteryFeedback < 0 )
+				{
+					gBatteryFeedback <- 0 
+				} else {
+					gBatteryFeedback <- 1
+				}
 			} else
 			{
 				Usage()
@@ -737,6 +753,12 @@ define InitDefaults()
 	gSmlFont<- MakeFont( "Vera.ttf",0,20,gFGColor,gBGColor,0)
 	gDbgFont<-MakeFont(  "Vera.ttf",0,20,gDbgColor,gBGColor,0)
 
+	gBatteryThreshold<-0.85
+	gBatteryFeedback<-1
+	gTotNumDistract<-0
+	gNumCorrectDistract<-0
+	gTimesDistract<-[]
+
 	gResultsDir<-"."
 
 	gDrawDebug<-0
@@ -749,7 +771,6 @@ define WriteRunResult( stages, runResult )
 {
 	pctCorrectDistract<- -1
 	avgTimeDistract<- -1
-
 	totTimeDistract<-0
 	numCorrectDistract<-0
 	totNumDistract<-0
@@ -760,6 +781,7 @@ define WriteRunResult( stages, runResult )
 			success<-Nth(result,2)
 			ms<-Nth(result, 3)
 			totTimeDistract<- totTimeDistract+ms
+			gTimesDistract <- Append( gTimesDistract,  ms )
 			if ( success == 1 )
 			{
 				numCorrectDistract<-numCorrectDistract+1
@@ -768,9 +790,13 @@ define WriteRunResult( stages, runResult )
 		}
 		FilePrint( gSubOut, Nth( result, 1 ) + "," + Nth( result, 2 ) + ","+Nth(result,3 ) )
 	}
+
 	if ( totNumDistract > 0 ) {
 		pctCorrectDistract<- numCorrectDistract / totNumDistract
 		avgTimeDistract<- totTimeDistract / totNumDistract
+
+		gTotNumDistract <- gTotNumDistract + totNumDistract
+		gNumCorrectDistract <- gNumCorrectDistract + numCorrectDistract
 	}
 
 	return [avgTimeDistract,pctCorrectDistract]
@@ -829,9 +855,58 @@ define Start(par)
 		{
 			stages<-Nth(defn, 5)
 			runRes<-PresentRun( Nth(defn, 2), Nth(defn, 3), Nth(defn, 4), stages, Nth(defn, 6) )
-			WriteRunResult( stages, runRes )
+			#WriteRunResult( stages, runRes )
 		} elseif ( type == "static" ) {
 			PresentStatic( Nth( defn, 2), Nth( defn, 3 ), Nth(defn, 4), iDefnNum == Length( gRunDefn ) )
+		} elseif ( type == "battery" ) {
+			# PresentRun(  distractMS, targetMS, numTarget, stages, feedback )
+			reps<-Nth( defn, 2 )
+			min<-Nth(defn, 3)
+			max<-Nth(defn, 4 )
+			target_timeout<-Nth( defn, 5 )
+
+
+			Print( "DoBattery" )
+			Print( "reps="+reps )
+			Print( "min="+min )
+			Print( "max="+max )
+			Print( "target_timeout="+target_timeout )
+			abort<- 0
+			distract_timeout<- -1
+			if ( gTotNumDistract > 0 )
+			{
+				pctCorrect<- gNumCorrectDistract / gTotNumDistract
+
+				if ( pctCorrect < gBatteryThreshold )
+				{
+					abort <- 1
+				}
+				SignalFatalError( "TODO: calc distract_timeout" )
+			}
+
+			if ( abort == 1 )
+			{
+				SignalFatalError( "TODO: abort battery" )
+			} else {
+				Print( "distract_timeout="+distract_timeout )
+
+				lens<-Sequence( min, max, 1 )
+				lens<-Flatten( ShuffleRepeat( lens, reps ) )
+
+				# PresentRun(  distractMS, targetMS, numTarget, stages, feedback )
+				Loop( runLen, lens )
+				{
+					stages<-[]
+					Loop( i, Sequence( 1, runLen, 1 ) )
+					{
+						stages<-Append(stages, "D" )
+						stages<-Append(stages, "T" )
+					}
+					
+					runRes<-PresentRun( distract_timeout, target_timeout, runLen, stages, gBatteryFeedback )
+					WriteRunResult( stages, runRes )
+				}
+			}
 		} else {
 			SignalFatalError( "Unk run type: " +type )
 		}
@@ -869,6 +944,8 @@ define LoadRunDefn( a_File )
 	#  run:<distract_timeout>:<target_timeout>:{D|T}{1,}
 	# a special screen loaded from file
 	#  static:file.txt
+	# a battery of tests
+	#  battery:rep:min:max:target_timeout
 	#
 	#
 	#
@@ -969,6 +1046,37 @@ define LoadRunDefn( a_File )
 
 				defn<-["static", timeout, centred, lines]
 				rval<-Append( rval, defn )
+			} elseif ( type == "battery" )
+			{
+				if ( Length( toks ) != 5 )
+				{
+					SignalFatalError( "Unrecognised battery spec: " + line )
+				}
+				#  expect
+				#  battery:rep:min:max:target_timeout
+				reps<-ToNumber(Nth(toks, 2 ) )
+				min<-ToNumber(Nth(toks, 3 ) )
+				max<-ToNumber(Nth(toks, 4 ) )
+				timeout<-ToNumber(Nth(toks, 5 ) )
+
+				if ( reps < 1 )
+				{
+					SignalFatalError( "Bad battery spec(reps<1):" + line )
+				}
+				if ( min< 1 )
+				{
+					SignalFatalError( "Bad battery spec(min<1):" + line )
+				}
+				if ( max< min )
+				{
+					SignalFatalError( "Bad battery spec(max<min):" + line )
+				}
+				if ( timeout < 1 )
+				{
+					SignalFatalError( "Battery timeout must be positive:" + line )
+				}
+				defn<-["battery", reps, min, max, timeout]
+				rval<-Append(rval, defn )
 			} else {
 				SignalFatalError( "Unrecognised run defn" + type )
 			}
