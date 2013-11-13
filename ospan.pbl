@@ -197,7 +197,7 @@ define ShowDistract(a_WaitTO)
 	return [rval,elapsed]
 }
 
-define ShowTargetLetter( testVal )
+define ShowTargetLetter( testVal, timeout )
 {
 	ShowCursor(0)
 	lText <- MakeLabel(testVal, gLgFont)
@@ -206,7 +206,7 @@ define ShowTargetLetter( testVal )
 	Move(lText, xPos,yPos)
 	AddObject(lText,gWin)
 	Draw()
-	Wait(gDispMS)
+	Wait(timeout)
 	RemoveObject(lText,gWin)
 }
 
@@ -391,7 +391,7 @@ define PresentRun(  distractMS, targetMS, numTarget, stages, feedback )
 			rval<-Append( rval, Merge( [stage], dRes ) );
 		} else {
 			iShownTarget<-iShownTarget+1
-			ShowTargetLetter( Nth( testVals, iShownTarget ) )
+			ShowTargetLetter( Nth( testVals, iShownTarget ), targetMS )
 		}
 	}
 
@@ -631,27 +631,12 @@ define ParseArgs(args)
 			argname<-Lowercase(Nth(toks,1))
 			argval<-Nth(toks,2)
 
-			if ( argname == "dispms" )
-			{
-				gDispMS<-ToNumber( argval )
-				if ( gDispMS < 5 or gDispMS > 5000 )
-				{
-					SignalFatalError( "Invalid milliseconds value for DispMS")
-				}
-			} elseif ( argname == "feedbacktimeout" )
+			if ( argname == "feedbacktimeout" )
 			{
 				gFeedbackTimeout<-ToNumber( argval )
 				if ( gFeedbackTimeout <= 0 )
 				{
 					gFeedbackTimeout<- -1
-				}
-			} elseif ( argname == "feedback" )
-			{
-				gFeedback<-ToNumber( argval )
-				if ( gFeedback > 0 ) {
-					gFeedback<- 1
-				} else {
-					gFeedback<- 0
 				}
 			} elseif ( argname == "distract" )
 			{
@@ -738,12 +723,9 @@ define InitDefaults()
 {
 	Print( "InitDefaults" )
 	gSleepEasy <- 1
-	# how long Target Letters are shown for
-	gDispMS <- 1000
 
 	gGridNumCol<- 3
 	gGridNumRow<- 4
-	gFeedback<- 1
 
 	gFeedbackTimeout<- -1
 	gFeedbackTOnly <- [ "You got %CORRECT_T% of %NUM_T% correct"]
@@ -792,6 +774,8 @@ define InitDefaults()
 	gRequireThresholdPreBattery<-1
 	gDistractTimeoutMinimum<-1000
 	gDistractTimeoutMultiplier<-1.25	# timeout=avg+multiplier*stddev
+
+	gShowCurrErrorRate<-1
 
 	gResultsDir<-"."
 
