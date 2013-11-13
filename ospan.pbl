@@ -688,6 +688,23 @@ define ParseArgs(args)
 				} else {
 					gBatteryFeedback <- 1
 				}
+				Print( "gBatteryFeedback set to " + gBatteryFeedback )
+			} elseif ( argname == "distracttimeoutminimum" )
+			{
+				gDistractTimeoutMinimum<- ToNumber( argval )
+				if ( gDistractTimeoutMinium < 100 )
+				{
+					SignalFatalError( "Invalid gDistractTimeoutMinium: " +argval )
+				}
+				Print( "gDistractTimeoutMinimum set to " + gDistractTimeoutMinimum )
+			} elseif ( argname == "distracttimeoutmultiplier" )
+			{
+				gDistractTimeoutMultiplier<- ToNumber( argval )
+				if ( gDistractTimeoutMinium < 1 )
+				{
+					SignalFatalError( "Invalid gDistractMultiplier: " +argval )
+				}
+				Print( "gDistractTimeoutMultiplier set to " + gDistractTimeoutMultiplier )
 			} else
 			{
 				Usage()
@@ -758,6 +775,9 @@ define InitDefaults()
 	gTotNumDistract<-0
 	gNumCorrectDistract<-0
 	gTimesDistract<-[]
+
+	gDistractTimeoutMinimum<-1000
+	gDistractTimeoutMultiplier<-1.25	# timeout=avg+multiplier*stddev
 
 	gResultsDir<-"."
 
@@ -884,7 +904,9 @@ define Start(par)
 				{
 					abort <- 1
 				} else {
-					SignalFatalError( "TODO: calc distract_timeout" )
+					distract_timeout <- Mean( gTimesDistract )
+					distract_timeout <- distract_timeout + gDistractTimeoutMultiplier * StdDev( gTimesDistract )
+					distract_timeout<- Max( [distract_timeout, gDistractTimeoutMinimum ] )
 				}
 			}
 
