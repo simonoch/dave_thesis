@@ -1,0 +1,21 @@
+The PEBL Operation Span task
+ By: Hegarty, Simon O'Cahan and Hegarty, David Lawrence (2nd author)
+ Updated and maintained by Shane Mueller
+
+ Licensed under GPLv3
+
+-v distract=distraction.txt -v run=rundefn.txt
+
+feedbacktimeout: timeout for feedback - if <= 0 click for next
+
+batterythreshold: if training distract doesn't exceed threshold battery does not proceed must be >=0 && <1
+
+requirethresholdprebattery: 0/1 allow to skip accuracy check pre battery  ( default is true)
+
+batteryfeedback: 0/1 provide feedback during the course of a battery (default is true )
+
+distracttimeoutminimum: prevent calculated distract timeout for battery being too low (default is 1000ms)
+
+distracttimeoutmultiplier: above timeout=avg+multiplier*stddev (default is 1.25)
+
+If a run ends with F feedback will be shown.
