@@ -8,52 +8,49 @@
 
 #############################################################
 #introductory instructions
-##static:-1:instructions.txt
+static:-1:instructions.txt
 
 #practice recall (2 x 2; 2 x 3)
-##static:-1:letters.txt
-##static:-1:letters2.txt
-##run:-1:1000:TTF
-##run:-1:1000:TTF
-##run:-1:1000:TTTF
-##run:-1:1000:TTTF
+static:-1:letters.txt
+static:-1:letters2.txt
+run:-1:1000:TTF
+run:-1:1000:TTF
+run:-1:1000:TTTF
+run:-1:1000:TTTF
 
 #practice maths problems (15 practice trials)
-##static:-1:numbers.txt
-##static:-1:numbers2.txt
-##static:-1:numbers3.txt
-##run:-1:0:DF
-##run:-1:0:DDF
-##run:-1:0:DF
-##run:-1:0:DDF
-##run:-1:0:DF
-##run:-1:0:DDF
-##run:-1:0:DF
-##run:-1:0:DDF
-##run:-1:0:DF
-##run:-1:0:DDF
-##run:-1:0:DF
-##run:-1:0:DDF
-##run:-1:0:DF
-##run:-1:0:DDF
-#run:-1:0:DF
+static:-1:numbers.txt
+static:-1:numbers2.txt
+static:-1:numbers3.txt
+run:-1:0:DF
+run:-1:0:DDF
+run:-1:0:DF
+run:-1:0:DDF
+run:-1:0:DF
+run:-1:0:DDF
+run:-1:0:DF
+run:-1:0:DDF
+run:-1:0:DF
+run:-1:0:DDF
+run:-1:0:DF
+run:-1:0:DDF
+run:-1:0:DF
+run:-1:0:DDF
+run:-1:0:DF
 
-# config battery on basis of results so far
-# depending on whether or not you clear stats just below
-#batteryconfig
+# config battery on basis of practise results
+batteryconfig
 
-# you decide if you're going to clear stats here
-# clearstats
+# clearstats before this practice battery
+clearstats
 
 #practice battery
-##static:-1:pracbattery1.txt
-##static:-1:pracbattery2.txt
-##static:-1:pracbattery3.txt
-##battery:2:2:2:1000
+static:-1:pracbattery1.txt
+static:-1:pracbattery2.txt
+static:-1:pracbattery3.txt
+battery:2:2:2:1000
 
-# if you didn't clear stats above you could reconfigure the battery again 
-
-# definitely clear stats before first real battery
+# definitely clear stats before the real
 clearstats
 
 #proper trials
