@@ -239,7 +239,8 @@ define ShowTargetInputScreen(padKeys, testVals)
 	
 	# the main keypad
 	# positioning of main keypad starts from centre of screen
-	currY <- gVideoHeight/2-100	# TODO rename
+	vShift<- 100
+	currY <- gVideoHeight/2-vShift	# TODO rename
 	currX <- gVideoWidth/2 # TODO rename
 	currX <- currX - ( gGridNumCol-1)/2 * cellHeight # height==width here
 	currY <- currY - (gGridNumRow-1)/2 * cellHeight
@@ -285,26 +286,48 @@ define ShowTargetInputScreen(padKeys, testVals)
 	cdKb <- MakeKB( gWin, cdKeys, cdX, cdY, Length(cdKeys), cdKeyWidth, keyHeight, spc )
 
 	miscLabels<-[]
-	Print( "gRunningDistractTaskFeedback = " + gRunningDistractTaskFeedback+" gTotNumDistract="+ gTotNumDistract ) 
 	if ( gRunningDistractTaskFeedback == 1 and gTotNumDistract > 0 )
 	{
 		# show them feedback on current pct correct on distract
 
-		topRightX <- gVideoWidth/2+(gGridNumCol/2) * cellHeight
-		topRightY <- gVideoHeight/2+(gGridNumRow/2) + cellHeight
+		topRightX <- gVideoWidth/2+(gGridNumCol+3)/2 * cellHeight 
+		topRightY <- gVideoHeight/2-(gGridNumRow+1)/2 * cellHeight - vShift
 
-		stupidFuckingLanguage<-MakeLabel( "Target: " + Round( gBatteryThreshold * 100 )+"%", gRedFeedbackFont )
-		miscLabels<-Append(miscLabels, stupidFuckingLanguage )
-		AddObject( stupidFuckingLanguage, gWin) 
-		Move( stupidFuckingLanguage, topRightX, topRightY )
-		Draw()
+
+		l1<-MakeLabel( "Target: " + Round( gBatteryThreshold * 100 )+"%", gRedFeedbackFont )
+		miscLabels<-Append(miscLabels, l1 )
+		AddObject( l1, gWin) 
 
 		distPct <-  gNumCorrectDistract / gTotNumDistract
-		cunt<-MakeLabel( "Pct Correct: "+Round(distPct)+"%" , gRedFeedbackFont )
-		miscLabels<-Append(miscLabels, cunt )
-		AddObject(cunt, gWin)
-		Move( cunt, topRightX, topRightY - cellHeight - padKeys );
+		l2<-MakeLabel( "Correct: "+Round(distPct*100)+"%" , gRedFeedbackFont )
+		miscLabels<-Append(miscLabels, l2 )
+		AddObject(l2, gWin)
 
+		l3<-MakeLabel( "Distraction", gRedFeedbackFont )
+		miscLabels<-Append(miscLabels, l3 )
+		AddObject(l3, gWin)
+
+		hShift<-0
+		maxW<-0
+		Loop( l, miscLabels )
+		{
+			sz<-GetSize(l)
+			w<-Last( sz )
+			if ( w> maxW )
+			{
+				maxW<-w
+			}
+		}
+
+		currY<-topRightY
+		Loop( l, miscLabels )
+		{
+			w<-Last(GetSize(l))
+			Move( l, topRightX-(maxW-w)/2, currY )
+
+			currY<-currY - cellHeight/2
+		}
+		Draw()
 	}
 
 	allClickable<-Flatten([allClickable, GetClickable(cdKb)])
@@ -350,7 +373,6 @@ define PresentStatic( timeout, centred, staticData, isLast )
 		lineLabs<-Append(lineLabs, l )
 
 		sz<-GetSize( l )
-                Print("labelsize:" + sz)
 		h<-First(sz)
 		w<-Last(sz)
 		if ( w > maxWidth )
