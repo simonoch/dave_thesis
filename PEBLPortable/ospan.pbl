@@ -284,6 +284,29 @@ define ShowTargetInputScreen(padKeys, testVals)
 	cdY<-selLabelY + cellHeight + padUserInput
 	cdKb <- MakeKB( gWin, cdKeys, cdX, cdY, Length(cdKeys), cdKeyWidth, keyHeight, spc )
 
+	miscLabels<-[]
+	Print( "gRunningDistractTaskFeedback = " + gRunningDistractTaskFeedback+" gTotNumDistract="+ gTotNumDistract ) 
+	if ( gRunningDistractTaskFeedback == 1 and gTotNumDistract > 0 )
+	{
+		# show them feedback on current pct correct on distract
+
+		topRightX <- gVideoWidth/2+(gGridNumCol/2) * cellHeight
+		topRightY <- gVideoHeight/2+(gGridNumRow/2) + cellHeight
+
+		stupidFuckingLanguage<-MakeLabel( "Target: " + Round( gBatteryThreshold * 100 )+"%", gRedFeedbackFont )
+		miscLabels<-Append(miscLabels, stupidFuckingLanguage )
+		AddObject( stupidFuckingLanguage, gWin) 
+		Move( stupidFuckingLanguage, topRightX, topRightY )
+		Draw()
+
+		distPct <-  gNumCorrectDistract / gTotNumDistract
+		cunt<-MakeLabel( "Pct Correct: "+Round(distPct)+"%" , gRedFeedbackFont )
+		miscLabels<-Append(miscLabels, cunt )
+		AddObject(cunt, gWin)
+		Move( cunt, topRightX, topRightY - cellHeight - padKeys );
+
+	}
+
 	allClickable<-Flatten([allClickable, GetClickable(cdKb)])
 	allVals<-Flatten([allVals, cdKeys])
 	allLabels<-Flatten([allLabels, GetLabels(cdKb)] )
@@ -300,6 +323,11 @@ define ShowTargetInputScreen(padKeys, testVals)
 	}
 	DestroyKB( gWin, blankKb )
 	DestroyKB( gWin, padKb )
+
+	loop(l,miscLabels)
+	{
+		RemoveObject( l, gWin );
+	}
 	return userInput
 }
 
@@ -424,6 +452,13 @@ define PresentRun(  distractMS, targetMS, numTarget, stages, feedback )
 		{
 			dRes<-ShowDistract( distractMS )
 			rval<-Append( rval, Merge( [stage], dRes ) );
+			if ( gCollectStats == 1 ) {
+				gTotNumDistract <- gTotNumDistract + 1
+				if ( Nth ( dRes, 1 ) == 1 )
+				{
+					gNumCorrectDistract <- gNumCorrectDistract + 1
+				}
+			}
 		} else {  ##Stage==T
 			iShownTarget<-iShownTarget+1
 			ShowTargetLetter( Nth( testVals, iShownTarget ), targetMS )
@@ -801,21 +836,30 @@ define InitDefaults()
         ##This is the font to use for static instruction screens:
 	gLgFontSz<-22
 	gKeyHeight<-2.1*gLgFontSz
-        gLgFont <- MakeFont("Vera.ttf",0,gLgFontSz,gFGColor,gBGColor,0)
+	gLgFont <- MakeFont("Vera.ttf",0,gLgFontSz,gFGColor,gBGColor,0)
 
-        gStimFontsz <- 40
+	gStimFontsz <- 40
 	gStimFont <- MakeFont(gPEBLBaseFont,0,gStimFontSz,gFGColor,gBGColor,0)
 
-         gLgFont_Disabled <- MakeFont("Vera.ttf",0,gLgFontSz,gFGDisabledColor,gBGColor,0)
+	gLgFont_Disabled <- MakeFont("Vera.ttf",0,gLgFontSz,gFGDisabledColor,gBGColor,0)
 	gSmlFont<- MakeFont( "Vera.ttf",0,20,gFGColor,gBGColor,0)
 	gDbgFont<-MakeFont(  "Vera.ttf",0,20,gDbgColor,gBGColor,0)
+	gRedFeedbackFont<-MakeFont( "Vera.ttf",0,20, MakeColor("red"), gBGColor, 0 )
 
 	gBatteryThreshold<-0.85
 	gBatteryFeedback<-1
+	gRunningDistractTaskFeedback<-1
+
+
+	# stats on distract tasks...
+	gCollectStats<-1
+	gBatteryDistractTimeout<- -1
+	gFirstBattery<-1
 	gTotNumDistract<-0
 	gNumCorrectDistract<-0
 	gTimesDistract<-[]
 
+	# do we abort at certain points if battery threshold not met
 	gRequireThresholdPreBattery<-1
 	gDistractTimeoutMinimum<-1000
 	gDistractTimeoutMultiplier<-2.5	# timeout=avg+multiplier*stddev
@@ -861,9 +905,6 @@ define ProcessRunResult( stages, runResult, write )
 	if ( totNumDistract > 0 ) {
 		pctCorrectDistract<- numCorrectDistract / totNumDistract
 		avgTimeDistract<- totTimeDistract / totNumDistract
-
-		gTotNumDistract <- gTotNumDistract + totNumDistract
-		gNumCorrectDistract <- gNumCorrectDistract + numCorrectDistract
 	}
 
 	return [avgTimeDistract,pctCorrectDistract]
@@ -941,49 +982,63 @@ define Start(par)
 			} elseif ( type == "static" ) {
 				PresentStatic( Nth( defn, 2), Nth( defn, 3 ), Nth(defn, 4), iDefnNum == Length( gRunDefn ) )
 
-			} elseif ( type == "battery" ) {
+			} elseif ( type == "pausestats" ) {
+				Print( "Paused stats" );
+				gCollectStats <- 0
 
+			} elseif ( type == "resumestats" ) {
+				Print( "Resumed stats" );
+				gCollectStats <- 1
 
-				reps<-Nth( defn, 2 )
-				min<-Nth(defn, 3)
-				max<-Nth(defn, 4 )
-				target_timeout<-Nth( defn, 5 )
+			} elseif ( type == "clearstats" ) {
+					gNumCorrectDistract <- 0
+					gTotNumDistract <- 0
+					gTimesDistract <- []
 
-				distract_timeout<- -1
-				if ( gTotNumDistract > 0 )
-				{
+			} elseif ( type == "batteryconfig" ) {
+				if ( gTotNumDistract > 0 ) {
 					pctCorrect<- gNumCorrectDistract / gTotNumDistract
 
 					if ( gRequireThresholdPreBattery == 1 and pctCorrect < gBatteryThreshold )
 					{
 						abort <- 1
 					} else {
-						distract_timeout <- Mean( gTimesDistract )
-						distract_timeout <- distract_timeout + gDistractTimeoutMultiplier * StdDev( gTimesDistract )
-						distract_timeout<- Max( [distract_timeout, gDistractTimeoutMinimum ] )
+						gBatteryDistractTimeout <- Mean( gTimesDistract )
+						gBatteryDistractTimeout <- gBatteryDistractTimeout + gDistractTimeoutMultiplier * StdDev( gTimesDistract )
+						gBatteryDistractTimeout<- Max( [gBatteryDistractTimeout, gDistractTimeoutMinimum ] )
 					}
+				} elseif ( Length ( gTimesDistract ) > 0 ) {
+					gBatteryDistractTimeout <- Mean( gTimesDistract )
+					gBatteryDistractTimeout <- gBatteryDistractTimeout + gDistractTimeoutMultiplier * StdDev( gTimesDistract )
+					gBatteryDistractTimeout<- Max( [gBatteryDistractTimeout, gDistractTimeoutMinimum ] )
+				} else {
+					gBatteryDistractTimeout<-gDistractTimeoutMinimum
+				}
+				if ( abort == 1 ) {
+					PresentStatic( -1, 1, gAbortThresholdMsg, 1 )
 				}
 
-				if ( abort == 1 )
-				{
-					PresentStatic( -1, 1, gAbortThresholdMsg, 1 )
-				} else {
-					lens<-Sequence( min, max, 1 )
-					lens<-Flatten( ShuffleRepeat( lens, reps ) )
+			} elseif ( type == "battery" ) {
+				reps<-Nth( defn, 2 )
+				min<-Nth(defn, 3)
+				max<-Nth(defn, 4 )
+				target_timeout<-Nth( defn, 5 )
 
-					# PresentRun(  distractMS, targetMS, numTarget, stages, feedback )
-					Loop( runLen, lens )
+				lens<-Sequence( min, max, 1 )
+				lens<-Flatten( ShuffleRepeat( lens, reps ) )
+
+				# PresentRun(  distractMS, targetMS, numTarget, stages, feedback )
+				Loop( runLen, lens )
+				{
+					stages<-[]
+					Loop( i, Sequence( 1, runLen, 1 ) )
 					{
-						stages<-[]
-						Loop( i, Sequence( 1, runLen, 1 ) )
-						{
-							stages<-Append(stages, "D" )
-							stages<-Append(stages, "T" )
-						}
-						
-						runRes<-PresentRun( distract_timeout, target_timeout, runLen, stages, gBatteryFeedback )
-						ProcessRunResult( stages, runRes, 1 )
+						stages<-Append(stages, "D" )
+						stages<-Append(stages, "T" )
 					}
+					
+					runRes<-PresentRun( gBatteryDistractTimeout, target_timeout, runLen, stages, gBatteryFeedback )
+					ProcessRunResult( stages, runRes, 1 )
 				}
 			} else {
 				SignalFatalError( "Unk run type: " +type )
@@ -1047,7 +1102,7 @@ define LoadRunDefn( a_File )
 			#	it's a comment line
 		} else {
 			toks <- SplitString( line, ":")
-			if ( Length(toks) < 2 )
+			if ( Length(toks) < 1 )
 			{
 				SignalFatalError( "Invalid run defn" );
 			}
@@ -1159,6 +1214,18 @@ define LoadRunDefn( a_File )
 				}
 				defn<-["battery", reps, min, max, timeout]
 				rval<-Append(rval, defn )
+			} elseif ( type == "pausestats" ) {	# just an instruction, no params
+				defn<-[type]
+				rval<-Append( rval, defn )
+			} elseif ( type == "resumestats" ) {	# just an instruction, no params
+				defn<-[type]
+				rval<-Append( rval, defn )
+			} elseif ( type == "batteryconfig" ) {	# just an instruction, no params
+				defn<-[type]
+				rval<-Append( rval, defn )
+			} elseif ( type == "clearstats" ) {	# just an instruction, no params
+				defn<-[type]
+				rval<-Append( rval, defn )
 			} else {
 				SignalFatalError( "Unrecognised run defn" + type )
 			}
