@@ -1,10 +1,21 @@
 #Automated OSpan Test
-
+#symspan
 #lines beginning with a '#' are comments, they are ignored
 
 #run:<distract_timeout>:<target_timeout>:{D|T}{1,}
 #static:<timeout>:<path/to/file.txt>
 #battery:<reps>:<min_targets>:<max_targets>:<target_timeout>
+
+
+
+
+
+# testing
+run:-1:0:DF
+
+
+
+
 
 #############################################################
 #introductory instructions
