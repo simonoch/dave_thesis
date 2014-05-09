@@ -3,6 +3,8 @@
 
 set -e
 
+echo "Running from $(pwd)"
+
 which pebl > /dev/null 2>&1 && true
 
 if [ $? -ne 0 ]
