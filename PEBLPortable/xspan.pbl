@@ -227,8 +227,34 @@ define ShowDistract(a_WaitTO)
 
 define ShowSymTarget( testVal, timeout )
 {
-	SignalFatalError( "TODO" )
+	fakeKeys<-[]
+	Loop( n, Sequence( 1, gGridNumCol * gGridNumRow, 1 ) )
+	{
+		fakeKeys<-Append( fakeKeys, ""+n )	 # gotta have textuals
+	}
 
+
+
+	kbp<-GetKBPositioning()
+
+	spc <- Nth( kbp, 1 )
+	keyHeight <- Nth( kbp, 2 )
+	cellHeight <- Nth( kbp, 3 )
+	vShift<- Nth( kbp, 4 )
+	currY <- Nth( kbp, 5 )
+	currX <- Nth( kbp, 6 )
+	currX <- Nth( kbp, 7 )
+	currY <- Nth( kbp, 8 )
+
+
+	padKb <- MakeSqKB( gWin, fakeKeys, currX, currY, gGridNumCol, keyHeight, spc )
+
+
+	WaitForClick( 10000 )
+
+
+
+	SignalFatalError( "TODO" )
 
 }
 
@@ -274,6 +300,7 @@ define GetKBPositioning()
 	rval<-Append(rval, currX )
 	rval<-Append(rval, currY )
 
+	return rval
 }
 
 define ShowTargetInputScreen(padKeys, testVals)
