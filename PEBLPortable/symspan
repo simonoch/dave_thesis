@@ -1,0 +1,13 @@
+#!/bin/bash
+
+
+
+XSPANPBL="/cygdrive/c/Users/simonh/home/dlh/src/PEBLPortable/xspan.pbl"
+
+if [ -f '/usr/bin/cygpath' ]
+then
+	# make work on cygwin - unix on windows
+	XSPANPBL=$(cygpath -aw $XSPANPBL)
+fi
+
+/cygdrive/c/Users/simonh/home/dlh/PEBLPortable0.14/PEBLPortable/PEBL/bin/pebl.exe --fullscreen -V testtype=symspan -V distract=distraction_symspan.txt $XSPANPBL
