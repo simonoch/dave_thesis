@@ -1,13 +1,35 @@
 #!/bin/bash
 
 
+set -e
 
-XSPANPBL="/cygdrive/c/Users/simonh/home/dlh/src/PEBLPortable/xspan.pbl"
+which pebl > /dev/null 2>&1 && true
 
-if [ -f '/usr/bin/cygpath' ]
+if [ $? -ne 0 ]
 then
-	# make work on cygwin - unix on windows
-	XSPANPBL=$(cygpath -aw $XSPANPBL)
+	PBLEXE="/cygdrive/c/Users/simonh/home/dlh/PEBLPortable0.14/PEBLPortable/PEBL/bin/pebl.exe"
+else
+	PBLEXE=$(which pebl)
 fi
 
-/cygdrive/c/Users/simonh/home/dlh/PEBLPortable0.14/PEBLPortable/PEBL/bin/pebl.exe --fullscreen -V testtype=symspan -V distract=distraction_symspan.txt $XSPANPBL
+
+echo "Using pebl exe:"
+echo "$PBLEXE"
+
+
+XSPANPBL="xspan.pbl"
+
+if [ ! -f $XSPANPBL ]
+then
+	XSPANPBL="/cygdrive/c/Users/simonh/home/dlh/src/PEBLPortable/xspan.pbl"
+	if [ -f '/usr/bin/cygpath' ]
+	then
+		# make work on cygwin - unix on windows
+		XSPANPBL=$(cygpath -aw $XSPANPBL)
+	fi
+fi
+
+echo "Using pebl script:"
+echo "$XSPANPBL"
+
+$PBLEXE --fullscreen -V testtype=symspan -V distract=distraction_symspan.txt $XSPANPBL
