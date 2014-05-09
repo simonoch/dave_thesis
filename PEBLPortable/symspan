@@ -14,6 +14,12 @@ else
 	PBLEXE=$(which pebl)
 fi
 
+if [ ! -f $PBLEXE ]
+then
+	echo "Couldn't find $PBLEXE"
+	exit -1
+fi
+
 
 echo "Using pebl exe:"
 echo "$PBLEXE"
@@ -29,6 +35,12 @@ then
 		# make work on cygwin - unix on windows
 		XSPANPBL=$(cygpath -aw $XSPANPBL)
 	fi
+fi
+
+if [ ! -f $XSPANPBL ]
+then
+	echo "Couldn't find $XSPANPBL"
+	exit -1
 fi
 
 echo "Using pebl script:"
