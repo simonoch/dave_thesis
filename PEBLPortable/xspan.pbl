@@ -227,13 +227,12 @@ define ShowDistract(a_WaitTO)
 
 define ShowSymTarget( testVal, timeout )
 {
+	testVal<-ToNumber(testVal)
 	fakeKeys<-[]
 	Loop( n, Sequence( 1, gGridNumCol * gGridNumRow, 1 ) )
 	{
 		fakeKeys<-Append( fakeKeys, ""+n )	 # gotta have textuals
 	}
-
-
 
 	kbp<-GetKBPositioning()
 
@@ -246,16 +245,15 @@ define ShowSymTarget( testVal, timeout )
 	currX <- Nth( kbp, 7 )
 	currY <- Nth( kbp, 8 )
 
-
 	padKb <- MakeSqKB( gWin, fakeKeys, currX, currY, gGridNumCol, keyHeight, spc )
 
+	allLabels<-[]
+	allLabels<-Flatten([allLabels, GetLabels(padKb)])
+	SetText( Nth( allLabels, testVal), "*" )
+	Draw()
 
-	WaitForClick( 10000 )
-
-
-
-	SignalFatalError( "TODO" )
-
+	Wait(timeout)
+	DestroyKB( gWin, padKb )
 }
 
 define ShowTargetLetter( testVal, timeout )
@@ -519,17 +517,19 @@ define MungeString( arr )
 define PresentRun(  distractMS, targetMS, numTarget, stages, feedback )
 {
 	testVals<-[]
-  padKeys<-SampleN( ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"], gGridNumCol * gGridNumRow)
+  padKeys<-[]
+	if ( gSymSpan == 1 )
+	{
+		Loop( n, Sequence( 1, gGridNumCol * gGridNumRow, 1 ) )
+		{
+			padKeys<-Append( padKeys, ""+n)
+		}
+	} else {
+		padKeys <- SampleN( ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"], gGridNumCol * gGridNumRow)
+	}
 	if ( numTarget > 0 )
 	{
-		if ( gSymSpan == 1 )
-		{
-			padKeys<-Repeat( "", gGridNumCol * gGridNumRow )
-			gridPop<-Sequence( 1, gGridNumCol * gGridNumRow, 1 )
-			testVals<-SampleN( gridPop, numTarget )
-		} else {
-			testVals<-SampleN(padKeys, numTarget)
-		}
+		testVals<-SampleN(padKeys, numTarget)
 	}
 
 	rval<-[]
