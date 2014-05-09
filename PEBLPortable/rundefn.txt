@@ -1,5 +1,5 @@
 #Automated OSpan Test
-#symspan
+symspan
 #lines beginning with a '#' are comments, they are ignored
 
 #run:<distract_timeout>:<target_timeout>:{D|T}{1,}
@@ -11,7 +11,7 @@
 
 
 # testing
-run:-1:0:DF
+run:-1:1000:TTTF
 
 
 
