@@ -203,7 +203,7 @@ define ShowDistract(a_WaitTO)
 		yPos <- yPos + 2 * cellHeight
 
 		keyWidth<-3*keyHeight
-		kb <- MakeKB( gWin, ["True","False"], xPos-keyWidth/2, yPos, 2, keyWidth, keyHeight, spc)
+		kb <- MakeKB( gWin, ["True","False"], xPos-keyWidth/2, yPos, 2, keyWidth, keyHeight, spc, 0)
 
 		resp<-GetKBInput( GetClickable( kb ), ["1", "0"]  )
 
@@ -245,11 +245,14 @@ define ShowSymTarget( testVal, timeout )
 	currX <- Nth( kbp, 7 )
 	currY <- Nth( kbp, 8 )
 
-	padKb <- MakeSqKB( gWin, fakeKeys, currX, currY, gGridNumCol, keyHeight, spc )
+	padKb <- MakeSqKB( gWin, fakeKeys, currX, currY, gGridNumCol, keyHeight, spc, 1 )
 
 	allLabels<-[]
 	allLabels<-Flatten([allLabels, GetLabels(padKb)])
-	SetText( Nth( allLabels, testVal), "*" )
+	# highlight target face
+	faces <- GetKeyFaces( padKb )
+	hiFace <- Nth( faces, testVal )
+	hiFace.color <- gSymShownTargetColor
 	Draw()
 
 	Wait(timeout)
@@ -313,7 +316,7 @@ define ShowTargetInputScreen(padKeys, testVals)
 	currX <- Nth( kbp, 6 )
 	currX <- Nth( kbp, 7 )
 	currY <- Nth( kbp, 8 )
-	padKb <- MakeSqKB( gWin, padKeys, currX, currY, gGridNumCol, keyHeight, spc )
+	padKb <- MakeSqKB( gWin, padKeys, currX, currY, gGridNumCol, keyHeight, spc, gSymSpan )
 
 	allClickable<-[]
 	allVals<-[]
@@ -328,7 +331,7 @@ define ShowTargetInputScreen(padKeys, testVals)
 	blankY<-Nth(padKb, 3)+keyHeight+spc
 	blankKey <- [gBlankKeyText]
 	blankWidth <- ( Nth(padKb, 2) - currX ) + keyHeight # width==height
-	blankKb <- MakeKB( gWin, blankKey, blankX, blankY, 1, blankWidth, keyHeight, spc  )
+	blankKb <- MakeKB( gWin, blankKey, blankX, blankY, 1, blankWidth, keyHeight, spc, 0 )
 
 	allClickable<-Flatten([allClickable, GetClickable(blankKb)])
 	allVals<-Flatten([allVals, blankKey])
@@ -357,7 +360,7 @@ define ShowTargetInputScreen(padKeys, testVals)
 	cdX<-gVideoWidth/2
 	cdX<- cdX - ( cdKeyWidth + spc )
 	cdY<-selLabelY + cellHeight + padUserInput
-	cdKb <- MakeKB( gWin, cdKeys, cdX, cdY, Length(cdKeys), cdKeyWidth, keyHeight, spc )
+	cdKb <- MakeKB( gWin, cdKeys, cdX, cdY, Length(cdKeys), cdKeyWidth, keyHeight, spc, 0 )
 
 	miscLabels<-[]
 	if ( gRunningDistractTaskFeedback == 1 and gTotNumDistract > 0 )
@@ -408,8 +411,10 @@ define ShowTargetInputScreen(padKeys, testVals)
 	allVals<-Flatten([allVals, cdKeys])
 	allLabels<-Flatten([allLabels, GetLabels(cdKb)] )
 
+	padFaces <- GetKeyFaces( padKb )
+
 	# get the user's input
-	userInput<-GetMouseInput( allClickable, allVals, allLabels, selLabels )
+	userInput<-GetMouseInput( allClickable, allVals, allLabels, selLabels, padFaces )
 	PrefixPrintList("UserInput:", userInput )
 
 	# and clean up
@@ -492,7 +497,7 @@ define PresentStatic( timeout, centred, staticData, isLast )
 			spc<- 8
 			keyHeight <- 1.9 * gLgFontSz
 			keyWidth<-3*keyHeight
-			kb <- MakeKB( gWin, ["Next"], gVideoWidth-keyWidth/2-spc, gVideoHeight-keyHeight/2-spc, 1, keyWidth, keyHeight, spc)
+			kb <- MakeKB( gWin, ["Next"], gVideoWidth-keyWidth/2-spc, gVideoHeight-keyHeight/2-spc, 1, keyWidth, keyHeight, spc, 0)
 			resp<-GetKBInput( GetClickable( kb ), ["whatevs"]  )
 			DestroyKB( gWin, kb )
 		}
@@ -645,7 +650,7 @@ define PresentRun(  distractMS, targetMS, numTarget, stages, feedback )
 	return rval
 }
 
-define GetMouseInput( clickable, values, keyLabels, selLabels )
+define GetMouseInput( clickable, values, keyLabels, selLabels, padFaces )
 {
 	ShowCursor(1)
 	SetMouseCursorPosition(Round(gVideoWidth/2), Round(gVideoHeight/2))
@@ -739,6 +744,7 @@ define GetMouseInput( clickable, values, keyLabels, selLabels )
 			}
 		} elseif ( Length( rval ) < Length( selLabels ) )
 		{
+			# it's user input !
 			if ( resp == gBlankKeyText )
 			{
 				# is blank key
@@ -749,11 +755,16 @@ define GetMouseInput( clickable, values, keyLabels, selLabels )
 				# Not already selected
 				rval<-Append(rval, resp )
 				SetText( Nth(selLabels, Length(rval)), resp )
-				if ( gDisableGridSelections <> 0 )
+
+				# Provide visual cue it's been selected
+				idx <- FindFirstIndex( values, resp )
+				if ( gSymSpan == 1 )
 				{
-					idx <- FindFirstIndex( values, resp )
+					SetText( Nth( keyLabels, idx), ""+Length( rval ) )
+				} else {
 					SetFont( Nth( keyLabels, idx), gLgFont_Disabled )
 				}
+				
 			}
 			# enable done if appropriate
 			if ( Length( rval ) == Length( selLabels ) )
@@ -927,6 +938,7 @@ define InitDefaults()
 	gSymSpan<-0
 	gSymSpanGridWidth<- 4
 	gSymSpanGridHeight<- 4
+	gSymShownTargetColor<-MakeColor( "red" )
 
 	gFeedbackTimeout<- 1500
 	gFeedbackTOnly <- [ "You got %CORRECT_T% of %NUM_T% correct"]
@@ -960,7 +972,6 @@ define InitDefaults()
 
 	# when a user selects a grid item, draw it as disabled to 
 	# suggest they can't select again
-	gDisableGridSelections<-1
 	gNoSelectionChar<-"*"
 	gUnknownValue<-"_"
 
@@ -975,7 +986,7 @@ define InitDefaults()
 	gLgFont_Disabled <- MakeFont("Vera.ttf",0,gLgFontSz,gFGDisabledColor,gBGColor,0)
 	gSmlFont<- MakeFont( "Vera.ttf",0,20,gFGColor,gBGColor,0)
 	gDbgFont<-MakeFont(  "Vera.ttf",0,20,gDbgColor,gBGColor,0)
-	gRedFeedbackFont<-MakeFont( "Vera.ttf",0,20, MakeColor("red"), gBGColor, 0 )
+	gRedFeedbackFont<-MakeFont( "Vera.ttf",0,20, MakeColor("blue"), gBGColor, 0 )
 
 	gBatteryThreshold<-0.85
 	gBatteryFeedback<-1
@@ -1434,12 +1445,12 @@ define GetKBInput( kb, value_map )
 	return rval
 }
 
-define MakeSqKB(win, keys,  kbLeft, kbTop, nCol, keySz, spc  )
+define MakeSqKB(win, keys,  kbLeft, kbTop, nCol, keySz, spc, hideText  )
 {
-	return MakeKB( win, keys,  kbLeft, kbTop, nCol, keySz, keySz, spc  )
+	return MakeKB( win, keys,  kbLeft, kbTop, nCol, keySz, keySz, spc, hideText )
 }
 
-define MakeKB(win, keys,  kbLeft,kbTop, nCol, keyWidth, keyHeight, spc  )
+define MakeKB(win, keys,  kbLeft,kbTop, nCol, keyWidth, keyHeight, spc, hideText  )
 {
 	border<-4
 
@@ -1451,6 +1462,7 @@ define MakeKB(win, keys,  kbLeft,kbTop, nCol, keyWidth, keyHeight, spc  )
 	clickable <- []
 	labels<-[]
 	stuff <- []
+	keyFaces <- []
 	i<-1
 	loop(aKey,keys)
 	{
@@ -1459,10 +1471,14 @@ define MakeKB(win, keys,  kbLeft,kbTop, nCol, keyWidth, keyHeight, spc  )
 		i<-i+1
 		
 		back1 <- Rectangle(kbLeft+colnum*cellWidth,kbTop+rownum*cellHeight,keyWidth, keyHeight,gKeyBorder,1)
-		back2 <- Rectangle(kbLeft+colnum*cellWidth,kbTop+rownum*cellHeight,keyWidth-4,keyHeight-4, gKeyFace,1)
-		lab <- MakeLabel(aKey,gLgFont)
+		keyFace <- Rectangle(kbLeft+colnum*cellWidth,kbTop+rownum*cellHeight,keyWidth-4,keyHeight-4, gKeyFace,1)
+		if ( hideText==1 ) {
+			lab <- MakeLabel("",gLgFont)
+		} else {
+			lab <- MakeLabel(aKey,gLgFont)
+		}
 		AddObject(back1,win)
-		AddObject(back2,win)
+		AddObject(keyFace,win)
 		AddObject(lab,win)
 		x<-kbLeft+colnum*cellWidth
 		y<-kbTop+rownum*cellHeight
@@ -1470,12 +1486,13 @@ define MakeKB(win, keys,  kbLeft,kbTop, nCol, keyWidth, keyHeight, spc  )
 		if ( x > xExtent ) { xExtent <- x }
 		if ( y > yExtent ) { yExtent <- y }
 		clickable <- Append(clickable,back1)
-		stuff <- Append(stuff,[lab,back1,back2])
+		stuff <- Append(stuff,[lab,back1,keyFace])
 		labels <- Append(labels, lab)
+		keyFaces <- Append( keyFaces, keyFace )
 	}
 	Draw()
 
-	return [clickable,xExtent,yExtent, cellWidth, Flatten(stuff), labels]
+	return [clickable,xExtent,yExtent, cellWidth, Flatten(stuff), labels, keyFaces]
 }
 
 define GetClickable( kb )
@@ -1488,21 +1505,21 @@ define GetLabels( kb )
 	return Nth(kb, 6)
 }
 
+define GetKeyFaces( kb )
+{
+	return Nth(kb, 7)
+}
+
 define DestroyKB(win,kb)
 {
 	loop( obj, Flatten( Nth(kb, 5 ) ) )
 	{
 		RemoveObject( obj, win)
 	}
-
 }
-
 
 define GetStrings(lang)
 {
-
-
-
   lang <- Uppercase(lang)
 
    if(lang=="EN")
