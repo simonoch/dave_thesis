@@ -694,6 +694,12 @@ define GetMouseInput( clickable, values, keyLabels, selLabels, padFaces )
 					if ( idx > 0 )
 					{
 						SetFont( Nth( keyLabels, idx ), gLgFont )
+						if ( gSymSpan )
+						{
+							SetText( Nth( keyLabels, idx), "" )
+							selFace <- Nth( padFaces, idx )
+							selFace.color <- gKeyFace # this could be a no-op but we don't care
+						}
 					}
 				}
 				rval<-[]
@@ -724,6 +730,13 @@ define GetMouseInput( clickable, values, keyLabels, selLabels, padFaces )
 				if ( idx > 0 )
 				{
 					SetFont( Nth( keyLabels, idx), gLgFont )
+
+					if ( gSymSpan )
+					{
+						SetText( Nth( keyLabels, idx), "" )
+						selFace <- Nth( padFaces, idx )
+						selFace.color <- gKeyFace # this could be a no-op but we don't care
+					}
 				}
 
 				# remove from selection & rval
@@ -754,13 +767,24 @@ define GetMouseInput( clickable, values, keyLabels, selLabels, padFaces )
 			{
 				# Not already selected
 				rval<-Append(rval, resp )
-				SetText( Nth(selLabels, Length(rval)), resp )
+				if ( gSymSpan == 1 )
+				{
+					# for symspan we set to be the length of the rval
+					SetText( Nth(selLabels, Length(rval)), ""+Length(rval) )
+				} else {
+					SetText( Nth(selLabels, Length(rval)), resp )
+				}
 
 				# Provide visual cue it's been selected
 				idx <- FindFirstIndex( values, resp )
 				if ( gSymSpan == 1 )
 				{
 					SetText( Nth( keyLabels, idx), ""+Length( rval ) )
+					if ( gSymSpanHighlightPickedFaces <> 0 )
+					{
+						selFace<-Nth(padFaces, idx)
+						selFace.color <- gSymShownTargetColor
+					}
 				} else {
 					SetFont( Nth( keyLabels, idx), gLgFont_Disabled )
 				}
@@ -829,6 +853,7 @@ define ParseArgs(args)
 					gSymSpan<-1
 					gGridNumCol<- 4
 					gGridNumRow<- 4
+					gUnknownValue <- "?"
 					Print( "Running as typetype " + argval )
 				} elseif ( argval == "ospan" ) {
 					# nothing for moment
@@ -939,6 +964,7 @@ define InitDefaults()
 	gSymSpanGridWidth<- 4
 	gSymSpanGridHeight<- 4
 	gSymShownTargetColor<-MakeColor( "red" )
+	gSymSpanHighlightPickedFaces<-1
 
 	gFeedbackTimeout<- 1500
 	gFeedbackTOnly <- [ "You got %CORRECT_T% of %NUM_T% correct"]
