@@ -46,4 +46,4 @@ fi
 echo "Using pebl script:"
 echo "$XSPANPBL"
 
-$PBLEXE --fullscreen -V testtype=symspan -V distract=distraction_symspan.txt $XSPANPBL
+$PBLEXE --fullscreen -V testtype=symspan $XSPANPBL

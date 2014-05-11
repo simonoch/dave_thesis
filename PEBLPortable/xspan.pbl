@@ -1,5 +1,5 @@
 ## The PEBL Operation span task
-## By David Hegarty and 
+## By David Hegarty and Dufflecoat Enterprises
 ## 
 ##  Minor modifications by Shane Mueller
 ##  This should work on a 1000x600 px screen
@@ -380,7 +380,7 @@ define ShowTargetInputScreen(padKeys, testVals)
 		miscLabels<-Append(miscLabels, l2 )
 		AddObject(l2, gWin)
 
-		l3<-MakeLabel( "Distraction", gRedFeedbackFont )
+		l3<-MakeLabel( gDistractBlurbHeader, gRedFeedbackFont )
 		miscLabels<-Append(miscLabels, l3 )
 		AddObject(l3, gWin)
 
@@ -848,22 +848,29 @@ define ParseArgs(args)
 			if ( argname == "testtype" )
 			{
 				argval<-Lowercase( argval )
+				gTestType<-argval
 				if ( argval == "symspan" )
 				{
 					gSymSpan<-1
 					gGridNumCol<- 4
 					gGridNumRow<- 4
 					gUnknownValue <- "?"
-					Print( "Running as typetype " + argval )
+					gDistractBlurbHeader<-"Symmetry"
 				} elseif ( argval == "ospan" ) {
-					# nothing for moment
-					Print( "Running as typetype " + argval )
+					gDistractBlurbHeader<-"Operations"
 				} elseif ( argval == "rspan" ) {
-					# nothing for the moment
+					gDistractBlurbHeader<-"Sentences"
 				} else {
 					Print( "Running as typetype " + argval )
 					SignalFatalError( "Invalid test type: " + argval )
 				}
+				Print( "Running as typetype " + gTestType )
+
+				# by default make these function of the test type
+				# you could override by changing order of arg listing
+				gDistractionFile <- "distraction_"+gTestType+".txt"				
+				gRunFile <- "rundefn_"+gTestType+".txt"
+
 			} elseif ( argname == "feedbacktimeout" ) {
 				gFeedbackTimeout<-ToNumber( argval )
 				if ( gFeedbackTimeout <= 0 )
@@ -959,6 +966,9 @@ define InitDefaults()
 	gGridNumCol<- 3
 	gGridNumRow<- 4
 
+
+	gTestType<-""
+
 	# default is not symspan
 	gSymSpan<-0
 	gSymSpanGridWidth<- 4
@@ -974,6 +984,11 @@ define InitDefaults()
 
 	gAbortThresholdMsg<- [ "Test cannot proceed - not meeting distract threshold" ]
 
+	gDistractBlurbHeader<-"Distraction"
+
+	# following should be between 0 and 1
+	gDistractPushbackOffset<-0
+
 
 	gDoneKeyText <- "Done"
 	gClearKeyText <- "Clear"
@@ -981,9 +996,10 @@ define InitDefaults()
 	gBlankKeyText <- "Blank"
 	
 
-	######################################	allocate the files here - edit externally
-	gDistractionFile <- "distraction.txt"				
-	gRunFile<-"rundefn.txt"
+	######################################
+	# by default these are named according to the test type
+	gDistractionFile <- "" #"distraction.txt"				
+	gRunFile<- "" #"rundefn.txt"
 	######################################
 
 
@@ -1028,7 +1044,7 @@ define InitDefaults()
 	gTimesDistract<-[]
 
 	# do we abort at certain points if battery threshold not met
-	gRequireThresholdPreBattery<-1
+	gRequireThresholdPreBattery<-0 # no
 	gDistractTimeoutMinimum<-1000
 	gDistractTimeoutMultiplier<-2.5	# timeout=avg+multiplier*stddev
 
@@ -1096,12 +1112,16 @@ define OpenSubOut()
 
 
 define Start(par)
- {
-
-
-        GetStrings(gLanguage)
+{
+  GetStrings(gLanguage)
 	InitDefaults()
 	ParseArgs(par)
+
+	if ( gTestType == "" )
+	{
+		Usage()
+		SignalFatalError( "No testtype specified" )
+	}
 
 	if ( gRunFile == "" )
 	{

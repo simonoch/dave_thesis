@@ -7,11 +7,15 @@
 
 
 
-#run:-1:0:DF
+run:-1:0:DF
 
 
 # testing
+run:-1:1000:DDDF
 run:-1:1000:TTTF
+batteryconfig
+clearstats
+battery:1:3:3:1000
 
 
 
