@@ -396,11 +396,16 @@ define ShowTargetInputScreen(padKeys, testVals)
 			}
 		}
 
-		currY<-topRightY
+		currY<-topRightY - gDistractBlurbPos * ( topRightY - 1.5 * cellHeight ) 
 		Loop( l, miscLabels )
 		{
 			w<-Last(GetSize(l))
-			Move( l, topRightX-(maxW-w)/2, currY )
+
+
+			xPos<-topRightX + gDistractBlurbPos * ( gVideoWidth - topRightX - maxW/2 )
+
+
+			Move( l, xPos-(maxW-w)/2, currY )
 
 			currY<-currY - cellHeight/2
 		}
@@ -986,8 +991,8 @@ define InitDefaults()
 
 	gDistractBlurbHeader<-"Distraction"
 
-	# following should be between 0 and 1
-	gDistractPushbackOffset<-0
+	# following should be a decimal between 0 and 1. 0 is left, 1 is right, 0.5 is halfway etc
+	gDistractBlurbPos<-0.75
 
 
 	gDoneKeyText <- "Done"
