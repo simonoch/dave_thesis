@@ -446,11 +446,21 @@ define PresentStatic( timeout, centred, staticData, isLast )
 	maxWidth<-0
 	maxHeight<-0
 	lineLabs<-[]
-	PrinT(staticData)
+	heights<-[]
+	isImgs<-[]
+
 	Loop( line, staticData )
 	{
+		isImg<-0
 		if ( StripSpace( Lowercase( line ) ) == "<blank>" ) {
 			l<-MakeLabel( "", gLgFont )
+		} elseif ( FindInString( StripSpace( Lowercase( line ) ), "<img>", 1 ) == 1 ) {
+			line<-StripSpace( line )
+			imFile<-SubString( line, 5 + 1, StringLength( line ) - 5 ) # 5 = length( "<img>" )
+			#Print( "Have ImgDef: " + line )
+			#Print( "Have ImgFile: " + imFile )
+			isImg<-1
+			l<-MakeImage( imFile )
 		} else {
 			l<-MakeLabel( line, gLgFont )
 		}
@@ -458,24 +468,41 @@ define PresentStatic( timeout, centred, staticData, isLast )
 
 		sz<-GetSize( l )
 		h<-First(sz)
+		heights<-Append( heights, h )
+		isImgs<-Append( isImgs, isImg )
 		w<-Last(sz)
 		if ( w > maxWidth )
 		{
 			maxWidth<- w
 		}
-		if ( h > maxHeight )
+ 		# we'll be wanting to space lines evenly, not sure
+		# if label height varies with content
+		if ( isImg == 0 and h > maxHeight )
 		{
 			maxHeight<-h
 		}
 	}
 
-
-	Print(maxWidth+"--"+maxHeight)
-	Print(sz)
-	currY <- gVideoHeight/2 - Length(staticData) * maxHeight * 0.5
-
-	Loop( lab, lineLabs )
+	contentHeight<-0
+	Loop( idx, Sequence( 1, Length( lineLabs ), 1 ) )
 	{
+		if ( Nth( isImgs, idx ) == 0 )
+		{
+			# we'll be wanting to space lines evenly, not sure
+			# if label height varies with content
+			SetElement( heights, idx, maxHeight )
+		}
+		contentHeight<-contentHeight+Nth(heights, idx )
+	}
+
+
+	currY <- gVideoHeight/2 - contentHeight* 0.5
+
+	Loop( idx, Sequence( 1, Length( lineLabs ), 1 ) )
+	{
+		h<-Nth( heights, idx )
+		currY<- currY + h/2
+		lab<-Nth( lineLabs, idx )
 		currX <- gVideoWidth/2
 		if ( centred == 0 )
 		{
@@ -486,7 +513,7 @@ define PresentStatic( timeout, centred, staticData, isLast )
 		#Print( "(x,y)=(" + currX + ","+currY +")" )
 		Move( lab, currX, currY )
 		AddObject( lab, gWin )
-		currY<- currY + maxHeight
+		currY<- currY + h/2
 	}
 
 	Draw()
@@ -1345,8 +1372,8 @@ define LoadRunDefn( a_File )
 			} elseif ( type == "static" )
 			{
 
-														 ## this is a text instruction block:
-														 ##
+				## this is a text instruction block:
+				##
 				if ( Length( toks ) < 3 )
 				{
 					SignalFatalError( "Unrecognised static file spec" + line )

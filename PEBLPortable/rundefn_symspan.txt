@@ -6,13 +6,15 @@
 #battery:<reps>:<min_targets>:<max_targets>:<target_timeout>
 
 
+static:-1:eg_embeddedimage.txt
 
 run:-1:0:DF
 
 
 # testing
-run:-1:1000:DDDF
-run:-1:1000:TTTF
+#run:-1:1000:DDDF
+#run:-1:1000:TTTF
+run:-1:1000:TF
 batteryconfig
 clearstats
 battery:1:3:3:1000

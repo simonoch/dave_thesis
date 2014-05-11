@@ -1,0 +1,12 @@
+<centretext>
+Here's an image
+<img>img/pebl.jpg
+Images must be specifed on a line
+all of their own with a <img> tag
+followed by the path to the file.
+<blank>
+The tagging is a bit of a weird
+syntax but was chosen simply 
+because it's unlikely to conflict
+with content you'd ever want to
+present.
